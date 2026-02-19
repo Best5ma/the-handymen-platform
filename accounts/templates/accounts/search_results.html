@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Search <span class="text-success">Results</span></h1>
+        {% if query %}
+            <p class="lead text-muted">Showing results for "{{ query }}"</p>
+            <p class="text-muted">{{ total_results }} results found</p>
+        {% else %}
+            <p class="lead text-muted">Enter a search term to find jobs and artisans</p>
+        {% endif %}
+    </div>
+
+    {% if query %}
+        <!-- Jobs Section -->
+        {% if jobs %}
+        <div class="mb-5">
+            <h3 class="fw-bold mb-4">
+                <i class="fas fa-briefcase text-success"></i> Jobs ({{ jobs.count }})
+            </h3>
+            <div class="row g-4">
+                {% for job in jobs %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">{{ job.title }}</h5>
+                            <p class="card-text text-muted">{{ job.description|truncatechars:80 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-success fw-bold">KES {{ job.price }}</span>
+                                <small class="text-muted">{{ job.location }}</small>
+                            </div>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-success btn-sm mt-3 w-100">
+                                View Job
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Artisans Section -->
+        {% if artisans %}
+        <div class="mb-5">
+            <h3 class="fw-bold mb-4">
+                <i class="fas fa-users text-success"></i> Artisans ({{ artisans.count }})
+            </h3>
+            <div class="row g-4">
+                {% for artisan in artisans %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            {% if artisan.profile.profile_picture %}
+                                <img src="{{ artisan.profile.profile_picture.url }}" class="rounded-circle mb-3" width="80" height="80" style="object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user fa-2x text-white"></i>
+                                </div>
+                            {% endif %}
+                            <h5 class="card-title fw-bold">{{ artisan.get_full_name|default:artisan.username }}</h5>
+                            <p class="text-muted small">{{ artisan.profile.location|default:"Location not set" }}</p>
+                            <a href="{% url 'public_profile' artisan.id %}" class="btn btn-outline-success btn-sm w-100">
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- No Results -->
+        {% if not jobs and not artisans %}
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No results found for "{{ query }}"</h4>
+            <p>Try different keywords or browse our <a href="{% url 'artisans_list' %}">artisans</a> and <a href="{% url 'job_list' %}">jobs</a> directly.</p>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty search -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" name="q" class="form-control form-control-lg" placeholder="Search for jobs or artisans..." required>
+                    <button type="submit" class="btn btn-success btn-lg ms-2">Search</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

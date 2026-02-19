@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Place Bid | {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'job_detail' job.id %}">{{ job.title|truncatechars:30 }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Place Bid</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-gavel me-2"></i> Place Your Bid</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Job Summary -->
+                    <div class="alert alert-info border-0 bg-light mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-2x text-info"></i>
+                            </div>
+                            <div>
+                                <h5 class="alert-heading fw-bold">{{ job.title }}</h5>
+                                <p class="mb-2">{{ job.description|truncatechars:150 }}</p>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <small><i class="fas fa-tag text-success me-1"></i> <strong>Budget:</strong> KES {{ job.price }}</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small><i class="fas fa-map-marker-alt text-danger me-1"></i> <strong>Location:</strong> {{ job.location }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Bid Amount Field - FIXED: changed name to bid_amount -->
+                        <div class="mb-4">
+                            <label for="id_bid_amount" class="form-label fw-bold fs-5">
+                                <i class="fas fa-coins text-success me-2"></i>Your Bid Amount (KES)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">KES</span>
+                                <input type="number"
+                                       name="bid_amount"  <!-- FIXED: changed from 'amount' to 'bid_amount' -->
+                                       id="id_bid_amount"
+                                       class="form-control form-control-lg {% if form.bid_amount.errors %}is-invalid{% endif %}"
+                                       value="{{ form.bid_amount.value|default:job.price }}"
+                                       required
+                                       min="1"
+                                       step="0.01"
+                                       placeholder="Enter your bid amount">
+                            </div>
+                            {% if form.bid_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ form.bid_amount.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i> Enter your bid amount in Kenyan Shillings. Client's budget is KES {{ job.price }}.
+                            </div>
+                        </div>
+
+                        <!-- Message Field - FIXED: changed name to message -->
+                        <div class="mb-4">
+                            <label for="id_message" class="form-label fw-bold fs-5">
+                                <i class="fas fa-envelope text-primary me-2"></i>Your Proposal
+                            </label>
+                            <textarea name="message"  <!-- FIXED: changed from 'proposal' to 'message' -->
+                                      id="id_message"
+                                      class="form-control {% if form.message.errors %}is-invalid{% endif %}"
+                                      rows="6"
+                                      placeholder="Introduce yourself and explain why you're the best person for this job...">{{ form.message.value|default:'' }}</textarea>
+                            {% if form.message.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ form.message.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                <strong>Tips for a winning proposal:</strong> Mention your experience, similar jobs you've done, your approach, and why you're reliable.
+                            </div>
+                        </div>
+
+                        <!-- Timeline Field - REMOVED since it doesn't exist in your model -->
+
+                        <hr class="my-4">
+
+                        <!-- Bid Summary -->
+                        <div class="bg-light p-3 rounded mb-4">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-file-invoice me-2"></i>Bid Summary</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Job Budget</small>
+                                    <strong class="fs-5">KES {{ job.price }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Your Bid</small>
+                                    <strong class="fs-5 text-success" id="summaryBidAmount">KES {{ form.bid_amount.value|default:job.price }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i> Submit Bid
+                            </button>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Tips for a Successful Bid</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Be specific about your experience</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Include examples of similar work</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Mention your qualifications</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Be competitive but fair with pricing</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Respond quickly to client questions</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Proofread your proposal</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to update summary in real-time -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bidAmountInput = document.getElementById('id_bid_amount');
+    const summaryElement = document.getElementById('summaryBidAmount');
+
+    if (bidAmountInput && summaryElement) {
+        bidAmountInput.addEventListener('input', function() {
+            const value = this.value || '0';
+            summaryElement.textContent = 'KES ' + value;
+        });
+    }
+});
+</script>
+
+<style>
+.breadcrumb a {
+    color: #22c55e;
+    text-decoration: none;
+}
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+.card {
+    border-radius: 15px;
+}
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+.form-control:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+}
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 12px;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+</style>
+{% endblock %}

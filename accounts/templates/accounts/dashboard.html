@@ -1,0 +1,1027 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Header with Stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="fw-bold">Welcome back, {{ user.get_full_name|default:user.username }}!</h2>
+                            <p class="mb-0">Role: <span class="badge bg-light text-dark fs-6">{{ role }}</span></p>
+                        </div>
+                        <div class="text-end">
+                            <i class="fas fa-tachometer-alt fa-4x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Alert -->
+    {% if unread_notifications and unread_notifications > 0 %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-bell me-2"></i>
+        You have <strong>{{ unread_notifications }}</strong> unread notification{{ unread_notifications|pluralize }}.
+        <a href="{% url 'notifications' %}" class="alert-link">View notifications</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if role == "Admin" %}
+        <!-- Admin Dashboard -->
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-cog me-2 text-success"></i>Admin Quick Actions
+                            </h5>
+                            <a href="/admin/" class="btn btn-success" target="_blank">
+                                <i class="fas fa-external-link-alt me-2"></i>Go to Django Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Users</h6>
+                        <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                        <small class="text-white-50">
+                            <i class="fas fa-user me-1"></i>
+                            Handymen: {{ handyman_count }} | Clients: {{ client_count }}
+                        </small>
+                        <i class="fas fa-users position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Jobs</h6>
+                        <h3 class="fw-bold mb-0">{{ total_jobs }}</h3>
+                        <small class="text-white-50">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Completed: {{ completed_jobs }}
+                        </small>
+                        <i class="fas fa-briefcase position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Bids</h6>
+                        <h3 class="fw-bold mb-0">{{ total_bids }}</h3>
+                        <small class="text-white-50">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Avg {{ avg_bid_per_job|floatformat:1 }} per job
+                        </small>
+                        <i class="fas fa-gavel position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-warning text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Reviews</h6>
+                        <h3 class="fw-bold mb-0">{{ total_reviews }}</h3>
+                        <small class="text-white-50">
+                            <i class="fas fa-star me-1"></i>
+                            Avg Rating: {{ avg_rating|floatformat:1 }} ★
+                        </small>
+                        <i class="fas fa-star position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Overview -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total in Escrow</h6>
+                        <h2 class="fw-bold text-info mb-0">KES {{ total_escrow|floatformat:2 }}</h2>
+                        <small class="text-muted">Money held securely across all jobs</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Open Disputes</h6>
+                        <h2 class="fw-bold text-danger mb-0">{{ open_disputes }}</h2>
+                        <small class="text-muted">Jobs requiring admin attention</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Tabs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#recent-jobs">
+                            <i class="fas fa-briefcase me-2"></i>Recent Jobs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#recent-users">
+                            <i class="fas fa-users me-2"></i>Recent Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#recent-bids">
+                            <i class="fas fa-gavel me-2"></i>Recent Bids
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#recent-transactions">
+                            <i class="fas fa-credit-card me-2"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#pending-verifications">
+                            <i class="fas fa-clock me-2"></i>Pending Verifications
+                            {% if pending_verifications.count > 0 %}
+                                <span class="badge bg-danger ms-1">{{ pending_verifications.count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Recent Jobs Tab -->
+                    <div class="tab-pane active" id="recent-jobs">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Client</th>
+                                        <th>Budget</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th>Bids</th>
+                                        <th>Posted</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for job in recent_jobs %}
+                                    <tr>
+                                        <td>#{{ job.id }}</td>
+                                        <td>{{ job.title|truncatechars:30 }}</td>
+                                        <td>{{ job.client.username }}</td>
+                                        <td>KES {{ job.price }}</td>
+                                        <td>
+                                            {% if job.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif job.status == 'in_progress' %}
+                                                <span class="badge bg-primary">In Progress</span>
+                                            {% elif job.status == 'open' %}
+                                                <span class="badge bg-warning">Open</span>
+                                            {% elif job.status == 'disputed' %}
+                                                <span class="badge bg-danger">Disputed</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ job.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if job.payment_status == 'escrow' %}
+                                                <span class="badge bg-info">In Escrow</span>
+                                            {% elif job.payment_status == 'released' %}
+                                                <span class="badge bg-success">Released</span>
+                                            {% elif job.payment_status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ job.payment_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge bg-info">{{ job.bids.count }}</span></td>
+                                        <td>{{ job.created_at|timesince }} ago</td>
+                                        <td>
+                                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4">
+                                            <p class="text-muted mb-0">No jobs found</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users Tab -->
+                    <div class="tab-pane fade" id="recent-users">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Type</th>
+                                        <th>Verified</th>
+                                        <th>Joined</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                    <tr>
+                                        <td>#{{ user.id }}</td>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            {% if user.is_handyman %}
+                                                <span class="badge bg-info">Handyman</span>
+                                            {% elif user.is_client %}
+                                                <span class="badge bg-success">Client</span>
+                                            {% elif user.is_superuser %}
+                                                <span class="badge bg-warning">Admin</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">User</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.is_email_verified %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.date_joined|timesince }} ago</td>
+                                        <td>
+                                            <a href="{% url 'public_profile' user.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <p class="text-muted mb-0">No users found</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Bids Tab -->
+                    <div class="tab-pane fade" id="recent-bids">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Job</th>
+                                        <th>Handyman</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bid in recent_bids %}
+                                    <tr>
+                                        <td>#{{ bid.id }}</td>
+                                        <td>{{ bid.job.title|truncatechars:30 }}</td>
+                                        <td>{{ bid.handyman.username }}</td>
+                                        <td class="fw-bold text-success">KES {{ bid.bid_amount }}</td>
+                                        <td>{{ bid.created_at|timesince }} ago</td>
+                                        <td>
+                                            <a href="{% url 'job_detail' bid.job.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-0">No bids found</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions Tab -->
+                    <div class="tab-pane fade" id="recent-transactions">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Job</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Receipt</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                    <tr>
+                                        <td>#{{ transaction.id }}</td>
+                                        <td>{{ transaction.job.title|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if transaction.transaction_type == 'payment' %}
+                                                <span class="badge bg-info">Payment</span>
+                                            {% elif transaction.transaction_type == 'release' %}
+                                                <span class="badge bg-success">Release</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ transaction.transaction_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="fw-bold">KES {{ transaction.amount }}</td>
+                                        <td>
+                                            {% if transaction.transaction_status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif transaction.transaction_status == 'pending' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% elif transaction.transaction_status == 'failed' %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ transaction.transaction_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if transaction.mpesa_receipt %}
+                                                {{ transaction.mpesa_receipt }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ transaction.created_at|timesince }} ago</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <p class="text-muted mb-0">No transactions found</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pending Verifications Tab -->
+                    <div class="tab-pane fade" id="pending-verifications">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Handyman</th>
+                                        <th>Email</th>
+                                        <th>Skills</th>
+                                        <th>Experience</th>
+                                        <th>Joined</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for handyman in pending_verifications %}
+                                    <tr>
+                                        <td>#{{ handyman.id }}</td>
+                                        <td>{{ handyman.username }}</td>
+                                        <td>{{ handyman.email }}</td>
+                                        <td>{{ handyman.profile.skills|truncatechars:20 }}</td>
+                                        <td>{{ handyman.profile.experience_years }} years</td>
+                                        <td>{{ handyman.date_joined|timesince }} ago</td>
+                                        <td>
+                                            <a href="/admin/accounts/user/{{ handyman.id }}/change/" class="btn btn-sm btn-success" target="_blank">
+                                                <i class="fas fa-check-circle"></i> Verify
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <p class="text-muted mb-0">No pending verifications</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Overview Charts -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2 text-success"></i>User Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="userChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2 text-success"></i>Job Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="jobChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif role == "Handyman" %}
+        <!-- Handyman Dashboard -->
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-briefcase text-success fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Available Jobs</h6>
+                                <h3 class="fw-bold mb-0">{{ available_jobs.count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-tasks text-primary fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Active Jobs</h6>
+                                <h3 class="fw-bold mb-0">{{ my_active_jobs.count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-gavel text-info fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">My Bids</h6>
+                                <h3 class="fw-bold mb-0">{{ my_bids.count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Earnings Card -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Earnings</h6>
+                        <h2 class="fw-bold mb-0">KES {{ total_earned|floatformat:2 }}</h2>
+                        <small class="text-white-50">From completed jobs</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm bg-warning text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Pending Withdrawals</h6>
+                        <h2 class="fw-bold mb-0">KES {{ pending_withdrawals|floatformat:2 }}</h2>
+                        <small class="text-white-50">Awaiting processing</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Jobs Section -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-briefcase me-2"></i> Available Jobs ({{ available_jobs.count }})</h4>
+            </div>
+            <div class="card-body">
+                {% if available_jobs %}
+                    <div class="row g-4">
+                        {% for job in available_jobs %}
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="card-title fw-bold mb-0">{{ job.title }}</h5>
+                                            <span class="badge bg-warning">Open</span>
+                                        </div>
+                                        <p class="card-text text-muted small mb-3">{{ job.description|truncatechars:80 }}</p>
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-tag text-success me-2" style="width: 20px;"></i>
+                                                <span class="fw-bold">KES {{ job.price }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-map-marker-alt text-danger me-2" style="width: 20px;"></i>
+                                                <span>{{ job.location }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-clock text-info me-2" style="width: 20px;"></i>
+                                                <span>{{ job.created_at|timesince }} ago</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i> {{ job.client.username }}
+                                            </small>
+                                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-success">
+                                                View Details <i class="fas fa-arrow-right ms-1"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-briefcase fa-4x text-muted mb-3"></i>
+                        <p class="text-muted fs-5">No jobs available at the moment.</p>
+                        <p class="small text-muted">Check back later or update your profile to get more visibility.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- My Active Jobs -->
+        {% if my_active_jobs %}
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-tasks me-2"></i> My Active Jobs ({{ my_active_jobs.count }})</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    {% for job in my_active_jobs %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm border-start border-success border-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title fw-bold">{{ job.title }}</h5>
+                                        {% if job.completion_requested %}
+                                            <span class="badge bg-warning">Completion Requested</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="card-text text-muted small">{{ job.description|truncatechars:80 }}</p>
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-user text-primary me-2" style="width: 20px;"></i>
+                                            <span><strong>Client:</strong> {{ job.client.username }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-tag text-success me-2" style="width: 20px;"></i>
+                                            <span><strong>Budget:</strong> KES {{ job.price }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock text-info me-2" style="width: 20px;"></i>
+                                            <span><strong>Started:</strong> {{ job.updated_at|timesince }} ago</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 mb-3">
+                                        <span class="badge bg-success">You are hired!</span>
+                                        {% if job.payment_status == 'escrow' %}
+                                            <span class="badge bg-info">Payment in Escrow</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Action Buttons for Active Jobs -->
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-primary">
+                                            View Job Details
+                                        </a>
+                                        {% if job.payment_status == 'escrow' and not job.completion_requested %}
+                                            <a href="{% url 'request_completion' job.id %}" class="btn btn-success">
+                                                <i class="fas fa-check-circle me-2"></i>Request Completion
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- My Bids -->
+        {% if my_bids %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-gavel me-2"></i> My Bids ({{ my_bids.count }})</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Your Bid</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bid in my_bids %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'job_detail' bid.job.id %}" class="text-decoration-none fw-bold">
+                                        {{ bid.job.title|truncatechars:30 }}
+                                    </a>
+                                </td>
+                                <td class="fw-bold text-success">KES {{ bid.bid_amount }}</td>
+                                <td>
+                                    <span class="bid-message" title="{{ bid.message }}">
+                                        {{ bid.message|truncatechars:30 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if bid.job.hired_worker == user %}
+                                        <span class="badge bg-success">Won</span>
+                                    {% elif bid.job.hired_worker %}
+                                        <span class="badge bg-danger">Lost</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ bid.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'job_detail' bid.job.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    {% elif role == "Client" %}
+        <!-- Client Dashboard -->
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Active Jobs</h6>
+                        <h3 class="fw-bold mb-0">{{ active_jobs }}</h3>
+                        <i class="fas fa-briefcase position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Jobs with Bids</h6>
+                        <h3 class="fw-bold mb-0">{{ jobs_with_bids }}</h3>
+                        <i class="fas fa-gavel position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Total Jobs</h6>
+                        <h3 class="fw-bold mb-0">{{ my_jobs.count }}</h3>
+                        <i class="fas fa-clipboard-list position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-warning text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Completed Jobs</h6>
+                        <h3 class="fw-bold mb-0">{{ completed_jobs }}</h3>
+                        <i class="fas fa-check-circle position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Stats -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Total Spent</h6>
+                        <h2 class="fw-bold text-success mb-0">KES {{ total_spent|floatformat:2 }}</h2>
+                        <small class="text-muted">On all completed jobs</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Money in Escrow</h6>
+                        <h2 class="fw-bold text-info mb-0">KES {{ in_escrow|floatformat:2 }}</h2>
+                        <small class="text-muted">Held securely until job completion</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-bolt me-2 text-success"></i> Quick Actions</h5>
+                            <div>
+                                <a href="{% url 'artisans_list' %}" class="btn btn-outline-success me-2">
+                                    <i class="fas fa-users me-2"></i> Browse Artisans
+                                </a>
+                                <a href="{% url 'post_job' %}" class="btn btn-success">
+                                    <i class="fas fa-plus-circle me-2"></i> Post New Job
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Jobs -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> My Posted Jobs</h4>
+            </div>
+            <div class="card-body">
+                {% if my_jobs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Budget</th>
+                                    <th>Bids</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Hired</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in my_jobs %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'job_detail' job.id %}" class="text-decoration-none fw-bold">
+                                            {{ job.title|truncatechars:30 }}
+                                        </a>
+                                    </td>
+                                    <td class="fw-bold text-success">KES {{ job.price }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ job.bids.count }}</span>
+                                    </td>
+                                    <td>
+                                        {% if job.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif job.status == 'in_progress' %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% elif job.status == 'open' %}
+                                            <span class="badge bg-warning">Open</span>
+                                        {% elif job.status == 'disputed' %}
+                                            <span class="badge bg-danger">Disputed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ job.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if job.payment_status == 'unpaid' %}
+                                            <span class="badge bg-danger">Unpaid</span>
+                                        {% elif job.payment_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif job.payment_status == 'escrow' %}
+                                            <span class="badge bg-info">In Escrow</span>
+                                        {% elif job.payment_status == 'released' %}
+                                            <span class="badge bg-success">Released</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if job.hired_worker %}
+                                            <a href="{% url 'public_profile' job.hired_worker.id %}" class="text-decoration-none">
+                                                {{ job.hired_worker.username }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            {% if job.status == 'open' and job.bids.exists %}
+                                                <a href="{% url 'job_detail' job.id %}#bids" class="btn btn-sm btn-outline-success" title="View Bids">
+                                                    <i class="fas fa-gavel"></i>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if job.status == 'in_progress' and job.payment_status == 'pending' %}
+                                                <a href="{% url 'initiate_payment' job.id %}" class="btn btn-sm btn-success" title="Pay Now">
+                                                    <i class="fas fa-lock"></i> Pay
+                                                </a>
+                                            {% endif %}
+
+                                            {% if job.status == 'in_progress' and job.payment_status == 'escrow' and job.completion_requested %}
+                                                <a href="{% url 'confirm_completion' job.id %}" class="btn btn-sm btn-success" title="Release Payment">
+                                                    <i class="fas fa-check-circle"></i> Release
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                        <p class="text-muted fs-5">You haven't posted any jobs yet.</p>
+                        <a href="{% url 'post_job' %}" class="btn btn-success mt-2">
+                            <i class="fas fa-plus-circle me-2"></i> Post Your First Job
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Chart.js for admin graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if role == "Admin" %}
+        // User Distribution Chart
+        const userCtx = document.getElementById('userChart').getContext('2d');
+        new Chart(userCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Handymen', 'Clients', 'Admins'],
+                datasets: [{
+                    data: [{{ handyman_count }}, {{ client_count }}, 1],
+                    backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Job Status Chart
+        const jobCtx = document.getElementById('jobChart').getContext('2d');
+        new Chart(jobCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Open', 'In Progress', 'Completed', 'Disputed'],
+                datasets: [{
+                    label: 'Jobs',
+                    data: [{{ open_jobs }}, {{ in_progress_jobs }}, {{ completed_jobs }}, {{ open_disputes }}],
+                    backgroundColor: ['#f59e0b', '#3b82f6', '#22c55e', '#dc2626'],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    {% endif %}
+});
+</script>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+.card-header {
+    border-bottom: none;
+}
+.nav-tabs .nav-link {
+    color: #64748b;
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+}
+.nav-tabs .nav-link.active {
+    color: #22c55e;
+    background: none;
+    border-bottom: 3px solid #22c55e;
+}
+.table th {
+    font-weight: 600;
+    color: #64748b;
+    border-top: none;
+}
+.badge {
+    padding: 6px 10px;
+}
+.hover-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+.bid-message {
+    cursor: help;
+    border-bottom: 1px dashed #ccc;
+}
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+.btn-success, .btn-outline-success {
+    transition: all 0.3s;
+}
+.btn-success:hover, .btn-outline-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg mx-auto border-0" style="max-width: 650px; border-radius: 20px;">
+        <div class="card-header bg-dark text-white text-center py-4" style="border-radius: 20px 20px 0 0;">
+            <h2 class="mb-0">Update Professional Profile</h2>
+            <p class="small mb-0 opacity-75">Enhance your trust with clients</p>
+        </div>
+        <div class="card-body p-4">
+
+            <!-- CRITICAL: enctype allows Image and File uploads -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row">
+                    <!-- Current Photo Preview -->
+                    <div class="col-12 text-center mb-4">
+                        {% if user.profile.profile_photo %}
+                            <img src="{{ user.profile.profile_photo.url }}" class="rounded-circle border shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded-circle d-inline-block p-4 border">
+                                <span class="text-muted">No Photo</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Profile Form Fields -->
+                    <div class="col-12">
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-dark">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                        💾 Save Changes
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

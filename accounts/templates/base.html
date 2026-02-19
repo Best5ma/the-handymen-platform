@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Handymen | Trust & Quality{% endblock %}</title>
+
+    <!-- 1. WORKING BOOTSTRAP 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 2. MODERN GOOGLE FONT (INTER) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- 3. FONT AWESOME FOR ICONS (MISSING - ADD THIS) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+        }
+        .navbar {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 0;
+            background-color: #0f172a !important; /* Professional Midnight Navy */
+        }
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -1px;
+            transition: all 0.3s;
+        }
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+        .nav-link {
+            font-weight: 600;
+            margin: 0 10px;
+            color: rgba(255,255,255,0.8) !important;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .nav-link:hover {
+            color: #fff !important;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background-color: #22c55e;
+            transition: width 0.3s;
+        }
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        /* THE "JOIN NOW" BUTTON STYLE */
+        .btn-join {
+            background-color: #22c55e;
+            border: none;
+            transition: 0.3s;
+            font-weight: 800;
+            box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
+        }
+        .btn-join:hover {
+            background-color: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* DROPDOWN MENU STYLING */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 15px;
+            transition: all 0.3s;
+        }
+        .dropdown-item:hover {
+            background-color: #22c55e;
+            color: white;
+            transform: translateX(5px);
+        }
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 8px;
+        }
+
+        /* FOOTER STYLES */
+        .footer {
+            background-color: #0f172a;
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 60px;
+        }
+        .footer a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer a:hover {
+            color: #22c55e;
+        }
+        .footer .social-icon {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            text-align: center;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .footer .social-icon:hover {
+            background-color: #22c55e;
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fs-3" href="{% url 'home' %}">
+                <span class="text-success">🛠️</span> THE HANDYMEN
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- PUBLIC LINKS FOR EVERYONE -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'artisans_list' %}">
+                            <i class="fas fa-users"></i> Artisans
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <!-- LINKS FOR AUTHENTICATED USERS -->
+
+                        {% if user.is_handyman %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'job_list' %}">
+                                    <i class="fas fa-briefcase"></i> Browse Jobs
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_client %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'post_job' %}">
+                                    <i class="fas fa-plus-circle"></i> Post Job
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            <a class="nav-link text-info" href="{% url 'public_profile' user.id %}">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+
+                        <!-- USER DROPDOWN MENU -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'edit_profile' %}">
+                                        <i class="fas fa-user-edit"></i> Edit Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'dashboard' %}">
+                                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- LINKS FOR UNAUTHENTICATED USERS -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-join text-white rounded-pill px-4 ms-2 fw-bold" href="{% url 'signup' %}">
+                                <i class="fas fa-user-plus"></i> Join Now
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- SUCCESS/ERROR MESSAGES -->
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- MAIN PAGE CONTENT -->
+    <div class="container py-4">
+        {% block content %}
+        <!-- All pages (Home, Dashboard, etc.) load here -->
+        {% endblock %}
+    </div>
+
+    <!-- FOOTER (ADD THIS FOR COMPLETE WEBSITE) -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold text-success mb-3">🛠️ THE HANDYMEN</h5>
+                    <p class="small opacity-75">Kenya's most trusted marketplace connecting clients with verified professional handymen.</p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{% url 'home' %}"><i class="fas fa-chevron-right me-1"></i> Home</a></li>
+                        <li class="mb-2"><a href="{% url 'artisans_list' %}"><i class="fas fa-chevron-right me-1"></i> Artisans</a></li>
+                        <li class="mb-2"><a href="#"><i class="fas fa-chevron-right me-1"></i> How It Works</a></li>
+                        <li class="mb-2"><a href="#"><i class="fas fa-chevron-right me-1"></i> Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3">Contact Info</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt text-success me-2"></i> Ruiru, Kenya</li>
+                        <li class="mb-2"><i class="fas fa-phone text-success me-2"></i> +254 700 000 000</li>
+                        <li class="mb-2"><i class="fas fa-envelope text-success me-2"></i> hello@thehandymen.co.ke</li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h6 class="fw-bold mb-3">Trust Badges</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-success p-2"><i class="fas fa-shield-alt"></i> M-Pesa Escrow</span>
+                        <span class="badge bg-success p-2"><i class="fas fa-check-circle"></i> Vetted Pros</span>
+                        <span class="badge bg-success p-2"><i class="fas fa-star"></i> 5,000+ Jobs</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="opacity-25">
+            <div class="text-center small opacity-75">
+                <p class="mb-0">© 2026 The Handymen Marketplace. All rights reserved. |
+                    <a href="#" class="text-white-50">Privacy Policy</a> |
+                    <a href="#" class="text-white-50">Terms of Service</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 3. WORKING BOOTSTRAP BUNDLE JS (Makes menus, X buttons, and FAQ work) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- OPTIONAL: ADD A LITTLE JAVASCRIPT FOR INTERACTIVITY -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+
+</body>
+</html>

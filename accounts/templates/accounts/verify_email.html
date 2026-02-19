@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter Code | The Handymen</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+        .box { background: white; padding: 40px; border-radius: 8px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { font-size: 24px; text-align: center; width: 200px; padding: 10px; margin: 20px 0; border: 2px solid #ddd; border-radius: 5px; }
+        .btn { background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Enter Verification Code</h2>
+        {% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
+        <p>Check your email (or terminal) for the 6-digit code.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="code" placeholder="000000" maxlength="6" required>
+            <br>
+            <button type="submit" class="btn">Verify & Access Dashboard</button>
+        </form>
+    </div>
+</body>
+</html>

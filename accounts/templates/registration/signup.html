@@ -1,0 +1,546 @@
+{% extends 'base.html' %}
+
+{% block title %}Join The Handymen | Create Account{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Signup Styling */
+    .signup-wrapper {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+
+    .signup-card {
+        background: white;
+        border-radius: 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 550px;
+        overflow: hidden;
+        animation: slideUpFade 0.6s ease-out;
+    }
+
+    @keyframes slideUpFade {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .signup-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .signup-header h2 {
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+        letter-spacing: -1px;
+    }
+
+    .signup-header h2 span {
+        color: #22c55e;
+    }
+
+    .signup-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .header-icon {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.1);
+        width: 90px;
+        height: 90px;
+        line-height: 90px;
+        border-radius: 50%;
+        text-align: center;
+    }
+
+    .signup-body {
+        padding: 40px 35px;
+    }
+
+    /* Django Form Styling */
+    .signup-form {
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .form-group label i {
+        color: #22c55e;
+        width: 20px;
+        margin-right: 8px;
+    }
+
+    /* Style for all input types */
+    .signup-form input[type="text"],
+    .signup-form input[type="email"],
+    .signup-form input[type="password"],
+    .signup-form input[type="number"],
+    .signup-form select,
+    .signup-form textarea {
+        width: 100%;
+        height: 52px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background: #f8fafc;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .signup-form textarea {
+        height: auto;
+        padding: 15px 20px;
+    }
+
+    .signup-form input:focus,
+    .signup-form select:focus,
+    .signup-form textarea:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+        background: white;
+        outline: none;
+    }
+
+    /* Help text styling */
+    .helptext {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 6px;
+        display: block;
+        line-height: 1.5;
+        background: #f1f5f9;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border-left: 3px solid #22c55e;
+    }
+
+    /* Error list styling */
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+    }
+
+    .errorlist li {
+        color: #dc2626;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 5px;
+        background: #fee2e2;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border-left: 3px solid #dc2626;
+    }
+
+    .errorlist li::before {
+        content: "⚠️";
+        font-size: 0.9rem;
+    }
+
+    /* Password requirements styling */
+    ul:not(.errorlist) {
+        background: #f8fafc;
+        padding: 15px 15px 15px 35px;
+        border-radius: 12px;
+        margin: 10px 0 0 0;
+        font-size: 0.85rem;
+        color: #475569;
+        border: 2px solid #e2e8f0;
+    }
+
+    ul:not(.errorlist) li {
+        margin-bottom: 5px;
+    }
+
+    ul:not(.errorlist) li::marker {
+        color: #22c55e;
+    }
+
+    /* Radio and checkbox styling */
+    .signup-form input[type="radio"],
+    .signup-form input[type="checkbox"] {
+        accent-color: #22c55e;
+        margin-right: 8px;
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Success message styling */
+    .alert-custom {
+        background: #dcfce7;
+        border: 2px solid #bbf7d0;
+        color: #166534;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+    }
+
+    .alert-custom i {
+        font-size: 1.2rem;
+        color: #22c55e;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        border: 2px solid #fecaca;
+        color: #991b1b;
+    }
+
+    .alert-error i {
+        color: #dc2626;
+    }
+
+    /* Register button */
+    .btn-register {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        height: 60px;
+        border: none;
+        border-radius: 15px;
+        font-weight: 800;
+        font-size: 1.2rem;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 30px 0 20px;
+        box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 30px rgba(34, 197, 94, 0.3);
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .btn-register:active {
+        transform: translateY(0);
+    }
+
+    .btn-register i {
+        font-size: 1.3rem;
+    }
+
+    /* Signup footer */
+    .signup-footer {
+        padding: 30px 35px 35px;
+        background: #f8fafc;
+        border-top: 2px solid #e2e8f0;
+        text-align: center;
+    }
+
+    .login-prompt {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .login-prompt p {
+        margin: 0 0 10px 0;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .login-prompt a {
+        color: #22c55e;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .login-prompt a:hover {
+        color: #16a34a;
+        gap: 12px;
+    }
+
+    .trust-badges {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .trust-badges span {
+        color: #64748b;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .trust-badges i {
+        color: #22c55e;
+    }
+
+    .terms-text {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 15px 0 0 0;
+    }
+
+    .terms-text a {
+        color: #0f172a;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .terms-text a:hover {
+        color: #22c55e;
+        text-decoration: underline;
+    }
+
+    /* Password strength indicator (optional) */
+    .password-strength {
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        background: #22c55e;
+        transition: width 0.3s;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .signup-body, .signup-footer {
+            padding: 30px 20px;
+        }
+
+        .signup-header {
+            padding: 30px 20px;
+        }
+
+        .signup-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .trust-badges {
+            gap: 15px;
+        }
+
+        .trust-badges span {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+<div class="signup-wrapper">
+    <div class="signup-card">
+        <!-- Header -->
+        <div class="signup-header">
+            <div class="header-icon">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <h2>JOIN <span>THE HANDYMEN</span></h2>
+            <p>Create your account and start your journey</p>
+        </div>
+
+        <!-- Signup Form Body -->
+        <div class="signup-body">
+            <!-- Display messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-custom {% if message.tags == 'error' %}alert-error{% endif %}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Registration Form -->
+            <form method="post" class="signup-form">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">
+                            {% if field.name == 'username' %}
+                                <i class="fas fa-user"></i>
+                            {% elif field.name == 'email' %}
+                                <i class="fas fa-envelope"></i>
+                            {% elif field.name == 'password1' or field.name == 'password2' %}
+                                <i class="fas fa-lock"></i>
+                            {% elif field.name == 'first_name' %}
+                                <i class="fas fa-signature"></i>
+                            {% elif field.name == 'last_name' %}
+                                <i class="fas fa-signature"></i>
+                            {% elif field.name == 'phone_number' %}
+                                <i class="fas fa-phone"></i>
+                            {% elif field.name == 'user_type' %}
+                                <i class="fas fa-user-tag"></i>
+                            {% else %}
+                                <i class="fas fa-circle"></i>
+                            {% endif %}
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="helptext">
+                                {{ field.help_text|safe }}
+                            </div>
+                        {% endif %}
+
+                        {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        <!-- Optional: Password strength indicator for password field -->
+                        {% if field.name == 'password1' %}
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="passwordStrength"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-user-plus"></i> CREATE ACCOUNT
+                </button>
+            </form>
+
+            <!-- Quick tips -->
+            <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 20px;">
+                <p style="margin: 0; color: #475569; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-shield-alt" style="color: #22c55e;"></i>
+                    Your information is secure with us. We'll never share your details.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer with login link and trust badges -->
+        <div class="signup-footer">
+            <div class="login-prompt">
+                <p>Already have an account?</p>
+                <a href="{% url 'login' %}">
+                    <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Trust badges matching login page -->
+            <div class="trust-badges">
+                <span><i class="fas fa-shield-alt"></i> M-Pesa Escrow</span>
+                <span><i class="fas fa-check-circle"></i> Vetted Pros</span>
+                <span><i class="fas fa-star"></i> 5,000+ Jobs</span>
+                <span><i class="fas fa-clock"></i> 24/7 Support</span>
+            </div>
+
+            <!-- Terms and conditions -->
+            <p class="terms-text">
+                By creating an account, you agree to our
+                <a href="#">Terms of Service</a> and
+                <a href="#">Privacy Policy</a>
+            </p>
+
+            <!-- Tagline -->
+            <p style="color: #94a3b8; font-size: 0.9rem; margin: 20px 0 0 0;">
+                <i class="fas fa-quote-left" style="opacity: 0.5;"></i>
+                Building Trust & Reliability in Every Job
+                <i class="fas fa-quote-right" style="opacity: 0.5;"></i>
+            </p>
+
+            <!-- Back to home -->
+            <a href="{% url 'home' %}" style="display: inline-block; margin-top: 15px; color: #64748b; font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Add Font Awesome for icons (if not already in base.html) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<!-- Optional: Password strength checker -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.querySelector('input[name="password1"]');
+    const strengthBar = document.getElementById('passwordStrength');
+
+    if (passwordField && strengthBar) {
+        passwordField.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+
+            if (password.length >= 8) strength += 25;
+            if (password.match(/[a-z]+/)) strength += 25;
+            if (password.match(/[A-Z]+/)) strength += 25;
+            if (password.match(/[0-9]+/)) strength += 15;
+            if (password.match(/[$@#&!]+/)) strength += 10;
+
+            strengthBar.style.width = strength + '%';
+
+            if (strength < 40) {
+                strengthBar.style.background = '#dc2626';
+            } else if (strength < 70) {
+                strengthBar.style.background = '#f59e0b';
+            } else {
+                strengthBar.style.background = '#22c55e';
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

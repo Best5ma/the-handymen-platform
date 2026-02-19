@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post a New Job | The Handymen</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background-color: #f4f4f4; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; width: 100%; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Post a Service Request</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Post Job Now</button>
+        </form>
+        <p><a href="{% url 'dashboard' %}">Cancel and go back</a></p>
+    </div>
+</body>
+</html>

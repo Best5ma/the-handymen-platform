@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Job Details</li>
+        </ol>
+    </nav>
+
+    <!-- Alert for pending actions -->
+    {% if job.completion_requested and is_owner and job.hired_worker %}
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>✅ Action Required!</strong> {{ job.hired_worker.get_full_name|default:job.hired_worker.username }} has marked this job as complete.
+        <a href="{% url 'confirm_completion' job.id %}" class="alert-link">Click here to review and release payment</a>.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Main Job Details -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0 fw-bold">{{ job.title }}</h3>
+                        <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'in_progress' %}bg-primary{% elif job.status == 'open' %}bg-warning{% elif job.status == 'disputed' %}bg-danger{% else %}bg-secondary{% endif %} fs-6">
+                            {% if job.status == 'completed' %}
+                                ✅ Completed
+                            {% elif job.status == 'in_progress' %}
+                                🔧 In Progress
+                            {% elif job.status == 'open' %}
+                                📢 Open for Bids
+                            {% elif job.status == 'disputed' %}
+                                ⚠️ Disputed
+                            {% else %}
+                                {{ job.status|title }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1"><i class="fas fa-user"></i> Posted by:</p>
+                            <p class="fw-bold">{{ job.client.get_full_name|default:job.client.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1"><i class="fas fa-calendar"></i> Posted on:</p>
+                            <p class="fw-bold">{{ job.created_at|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1"><i class="fas fa-tag"></i> Budget:</p>
+                            <p class="fw-bold text-success fs-4">KES {{ job.price }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1"><i class="fas fa-map-marker-alt"></i> Location:</p>
+                            <p class="fw-bold">{{ job.location }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted mb-2"><i class="fas fa-align-left"></i> Description:</p>
+                        <div class="p-3 bg-light rounded">
+                            {{ job.description|linebreaks }}
+                        </div>
+                    </div>
+
+                    <!-- Hired Worker Section -->
+                    {% if job.hired_worker %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Hired Handyman:</strong>
+                        <a href="{% url 'public_profile' job.hired_worker.id %}" class="text-decoration-none">
+                            {{ job.hired_worker.get_full_name|default:job.hired_worker.username }}
+                        </a>
+                        <div class="mt-2">
+                            <span class="badge {% if job.payment_status == 'escrow' %}bg-info{% elif job.payment_status == 'released' %}bg-success{% elif job.payment_status == 'pending' %}bg-warning{% endif %}">
+                                Payment: {{ job.get_payment_status_display }}
+                            </span>
+                            {% if job.completion_requested %}
+                                <span class="badge bg-warning">Completion Requested</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Payment Status Progress -->
+                    <div class="payment-status-bar mt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Payment Progress:</span>
+                            <span class="fw-bold">
+                                {% if job.payment_status == 'unpaid' %}
+                                    <span class="text-danger">⭕ Not Paid</span>
+                                {% elif job.payment_status == 'pending' %}
+                                    <span class="text-warning">⏳ Awaiting Payment</span>
+                                {% elif job.payment_status == 'escrow' %}
+                                    <span class="text-info">🔒 In Escrow</span>
+                                {% elif job.payment_status == 'released' %}
+                                    <span class="text-success">✅ Released</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar {% if job.payment_status == 'released' %}bg-success{% elif job.payment_status == 'escrow' %}bg-info{% elif job.payment_status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}"
+                                 role="progressbar"
+                                 style="width: {% if job.payment_status == 'released' %}100{% elif job.payment_status == 'escrow' %}66{% elif job.payment_status == 'pending' %}33{% else %}0{% endif %}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bids Section -->
+            {% if is_owner %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="fas fa-gavel me-2 text-success"></i>Bids Received ({{ bid_count }})
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if bids %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Handyman</th>
+                                        <th>Bid Amount</th>
+                                        <th>Message</th>
+                                        <th>Rating</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bid in bids %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'public_profile' bid.handyman.id %}" class="text-decoration-none fw-bold">
+                                                {{ bid.handyman.get_full_name|default:bid.handyman.username }}
+                                            </a>
+                                        </td>
+                                        <td class="fw-bold text-success">KES {{ bid.bid_amount }}</td>
+                                        <td>{{ bid.message|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if bid.handyman_avg_rating %}
+                                                {{ bid.handyman_avg_rating }} ★
+                                            {% else %}
+                                                <span class="text-muted">New</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ bid.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if not job.hired_worker and job.status == 'open' %}
+                                                <a href="{% url 'hire_worker' job.id bid.handyman.id %}"
+                                                   class="btn btn-sm btn-success"
+                                                   onclick="return confirm('Hire {{ bid.handyman.username }}?')">
+                                                    <i class="fas fa-handshake"></i> Hire
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No bids received yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- State Debug Card - Shows Current Status -->
+            <div class="card shadow-sm mb-4 border-warning">
+                <div class="card-header bg-warning text-white py-2">
+                    <h6 class="mb-0"><i class="fas fa-bug me-2"></i>Debug Information</h6>
+                </div>
+                <div class="card-body small">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td>Your Role:</td>
+                            <td>
+                                {% if is_owner %}
+                                    <span class="badge bg-primary">Client (Owner)</span>
+                                {% elif is_hired_handyman %}
+                                    <span class="badge bg-success">Hired Handyman</span>
+                                {% elif user.is_handyman %}
+                                    <span class="badge bg-info">Handyman (Not Hired)</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Visitor</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Job Status:</td>
+                            <td><span class="badge bg-dark">{{ job.status }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Payment Status:</td>
+                            <td><span class="badge bg-dark">{{ job.payment_status }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Hired Worker:</td>
+                            <td>{% if job.hired_worker %}{{ job.hired_worker.username }}{% else %}<span class="text-muted">None</span>{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <td>Completion Requested:</td>
+                            <td>{% if job.completion_requested %}<span class="badge bg-warning">Yes{% else %}<span class="badge bg-secondary">No{% endif %}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Job Actions Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-cog me-2 text-success"></i>Job Actions</h5>
+                </div>
+                <div class="card-body">
+
+                    <!-- ========== CLIENT ACTIONS ========== -->
+                    {% if is_owner %}
+                        <div class="alert alert-primary py-2 mb-3">
+                            <i class="fas fa-user-circle me-2"></i>You are viewing as the <strong>Client</strong>
+                        </div>
+
+                        <!-- CASE 1: Open for bids, no handyman hired -->
+                        {% if job.status == 'open' and not job.hired_worker %}
+                            <div class="text-center mb-3">
+                                <i class="fas fa-clock fa-3x text-warning mb-2"></i>
+                                <h6 class="fw-bold text-warning">Waiting for Bids</h6>
+                                <p class="small text-muted">Review bids above and hire the best handyman.</p>
+                            </div>
+
+                        <!-- CASE 2: Handyman hired, payment pending - SHOW PAY BUTTON -->
+                        {% elif job.status == 'in_progress' and job.payment_status == 'pending' and job.hired_worker %}
+                            <div class="payment-step active mb-3">
+                                <h6 class="fw-bold mb-3">Step 1: Pay to Escrow</h6>
+                                <p class="small text-muted mb-3">Secure payment protects both you and the handyman</p>
+
+                                <!-- PAYMENT BUTTON -->
+                                <a href="{% url 'initiate_payment' job.id %}" class="btn btn-primary w-100 mb-2 py-3">
+                                    <i class="fas fa-lock me-2"></i>
+                                    <strong>Pay KES {{ job.price }} via M-Pesa</strong>
+                                </a>
+                                <div class="alert alert-info mt-2 mb-0 py-2 small">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Money held in escrow until you confirm completion
+                                </div>
+                            </div>
+
+                        <!-- CASE 3: Payment in escrow, waiting for handyman -->
+                        {% elif job.status == 'in_progress' and job.payment_status == 'escrow' and job.hired_worker %}
+                            <div class="alert alert-success text-center mb-3">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <h6>Payment in Escrow</h6>
+                                <p class="small mb-0">KES {{ job.price }} securely held</p>
+                            </div>
+
+                            {% if job.completion_requested %}
+                                <!-- COMPLETION REQUESTED - SHOW RELEASE BUTTON -->
+                                <div class="payment-step active mb-3">
+                                    <h6 class="fw-bold text-warning mb-3">⚠️ Action Required</h6>
+                                    <div class="alert alert-success mb-3">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>{{ job.hired_worker.username }}</strong> has completed the job!
+                                    </div>
+
+                                    <!-- RELEASE PAYMENT BUTTON -->
+                                    <a href="{% url 'confirm_completion' job.id %}" class="btn btn-success w-100 mb-2 py-3">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Review & Release Payment</strong>
+                                    </a>
+                                    <p class="small text-muted text-center">Payment sent immediately to handyman</p>
+                                </div>
+                            {% else %}
+                                <div class="text-center">
+                                    <i class="fas fa-hourglass-half fa-2x text-muted mb-2"></i>
+                                    <p class="mb-0">Waiting for handyman to complete work</p>
+                                    <small class="text-muted">They will request completion when done</small>
+                                </div>
+                            {% endif %}
+
+                        <!-- CASE 4: Job Complete -->
+                        {% elif job.status == 'completed' %}
+                            <div class="alert alert-success text-center">
+                                <i class="fas fa-check-circle fa-3x mb-2"></i>
+                                <h5>Job Complete!</h5>
+                                <p class="small mb-0">Payment released to handyman</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Dispute Button -->
+                        {% if job.status == 'in_progress' and job.hired_worker %}
+                            <hr>
+                            <a href="{% url 'dispute_job' job.id %}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Raise Dispute
+                            </a>
+                        {% endif %}
+
+
+                    <!-- ========== HANDYMAN ACTIONS ========== -->
+                    {% elif is_hired_handyman %}
+                        <div class="alert alert-success py-2 mb-3">
+                            <i class="fas fa-tools me-2"></i>You are the <strong>Hired Handyman</strong>
+                        </div>
+
+                        <!-- CASE 1: Payment in escrow, can request completion -->
+                        {% if job.status == 'in_progress' and job.payment_status == 'escrow' %}
+                            {% if not job.completion_requested %}
+                                <!-- REQUEST COMPLETION BUTTON -->
+                                <div class="payment-step active mb-3">
+                                    <h6 class="fw-bold mb-3">Ready to submit?</h6>
+                                    <p class="small text-muted mb-3">Let the client know you've finished the work</p>
+
+                                    <a href="{% url 'request_completion' job.id %}" class="btn btn-primary w-100 mb-2 py-3">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Request Completion</strong>
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-clock fa-2x mb-2"></i>
+                                    <h6>Completion Requested</h6>
+                                    <p class="small mb-0">Waiting for client to review and release payment</p>
+                                </div>
+                            {% endif %}
+
+                        <!-- CASE 2: Payment released -->
+                        {% elif job.payment_status == 'released' %}
+                            <div class="alert alert-success text-center">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <h6>Payment Released!</h6>
+                                <p class="small mb-0">KES {{ job.price }} sent to your M-Pesa</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Dispute Button -->
+                        {% if job.status == 'in_progress' %}
+                            <hr>
+                            <a href="{% url 'dispute_job' job.id %}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Raise Dispute
+                            </a>
+                        {% endif %}
+
+
+                    <!-- ========== HANDYMAN NOT HIRED ========== -->
+                    {% elif user.is_handyman and not job.hired_worker and job.status == 'open' %}
+                        <div class="alert alert-info py-2 mb-3">
+                            <i class="fas fa-gavel me-2"></i>Place your bid
+                        </div>
+
+                        {% if can_bid %}
+                            <a href="{% url 'place_bid' job.id %}" class="btn btn-success w-100 mb-2 py-3">
+                                <i class="fas fa-gavel me-2"></i>
+                                <strong>Place Bid</strong>
+                            </a>
+                            <p class="small text-muted text-center">Suggested: KES {{ job.price }}</p>
+                        {% elif has_bid %}
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-check-circle mb-2"></i>
+                                <p class="mb-0 fw-bold">You have already placed a bid</p>
+                                <small>Waiting for client's response</small>
+                            </div>
+                        {% endif %}
+
+
+                    <!-- ========== UNAUTHENTICATED ========== -->
+                    {% else %}
+                        <p class="text-muted text-center mb-3">Login to place bids or hire handymen</p>
+                        <a href="{% url 'login' %}?next={% url 'job_detail' job.id %}" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Continue
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Share Job Card -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-share-alt me-2 text-success"></i>Share this job</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="copyJobLink()">
+                            <i class="fas fa-link me-1"></i> Copy Link
+                        </button>
+                        <a href="https://wa.me/?text=Check%20out%20this%20job%3A%20{{ job.title }}%20-%20{{ request.build_absolute_uri }}"
+                           target="_blank" class="btn btn-outline-success btn-sm flex-grow-1">
+                            <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyJobLink() {
+    const dummy = document.createElement('input');
+    const text = window.location.href;
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+    }, 2000);
+}
+</script>
+
+<style>
+.breadcrumb a {
+    color: #22c55e;
+    text-decoration: none;
+}
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+.card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+.card-header {
+    border-bottom: 2px solid #f0f0f0;
+    border-radius: 15px 15px 0 0 !important;
+}
+.payment-step {
+    padding: 15px;
+    border-radius: 12px;
+    background-color: #f8f9fa;
+    border-left: 4px solid transparent;
+}
+.payment-step.active {
+    background-color: #e8f5e9;
+    border-left-color: #22c55e;
+}
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+.progress-bar {
+    border-radius: 10px;
+}
+.alert {
+    border-radius: 12px;
+    border: none;
+}
+.badge {
+    padding: 6px 10px;
+}
+</style>
+{% endblock %}

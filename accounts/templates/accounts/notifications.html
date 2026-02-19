@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="fas fa-bell me-2 text-success"></i>
+            Notifications
+        </h2>
+        <div>
+            {% if unread_count > 0 %}
+            <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-check-double me-2"></i>Mark All as Read
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Unread Count Badge -->
+    <div class="mb-3">
+        <span class="badge {% if unread_count > 0 %}bg-success{% else %}bg-secondary{% endif %} p-2">
+            <i class="fas fa-envelope me-1"></i>
+            {{ unread_count }} Unread Notification{{ unread_count|pluralize }}
+        </span>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if notifications %}
+                <div class="list-group list-group-flush">
+                    {% for notification in notifications %}
+                    <div class="list-group-item {% if not notification.is_read %}list-group-item-success bg-opacity-10{% endif %} p-3">
+                        <div class="d-flex align-items-start">
+                            <!-- Notification Icon -->
+                            <div class="me-3">
+                                {% if notification.notification_type == 'bid' %}
+                                    <div class="bg-info bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-gavel text-info"></i>
+                                    </div>
+                                {% elif notification.notification_type == 'hire' %}
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-handshake text-success"></i>
+                                    </div>
+                                {% elif notification.notification_type == 'payment' %}
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-credit-card text-primary"></i>
+                                    </div>
+                                {% elif notification.notification_type == 'review' %}
+                                    <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-star text-warning"></i>
+                                    </div>
+                                {% elif notification.notification_type == 'completion' %}
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    </div>
+                                {% elif notification.notification_type == 'dispute' %}
+                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="bg-secondary bg-opacity-10 rounded-circle p-2">
+                                        <i class="fas fa-bell text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Notification Content -->
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1 {% if not notification.is_read %}text-success{% endif %}">
+                                            {{ notification.title }}
+                                            {% if not notification.is_read %}
+                                                <span class="badge bg-success ms-2">New</span>
+                                            {% endif %}
+                                        </h6>
+                                        <p class="mb-1 text-muted">{{ notification.message }}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ notification.created_at|timesince }} ago
+                                        </small>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="ms-3">
+                                        {% if notification.link %}
+                                            <a href="{{ notification.link }}" class="btn btn-sm btn-outline-success me-2">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        {% endif %}
+                                        {% if not notification.is_read %}
+                                            <a href="{% url 'mark_notification_read' notification.id %}?redirect={% url 'notifications' %}"
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-check me-1"></i>Mark Read
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Notifications</h5>
+                    <p class="small text-muted">You're all caught up! Check back later for updates.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    transition: all 0.3s;
+    border-left: 4px solid transparent;
+}
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+.list-group-item-success {
+    border-left-color: #22c55e;
+}
+.rounded-circle {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-outline-success, .btn-outline-secondary {
+    transition: all 0.3s;
+}
+.btn-outline-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.2);
+}
+</style>
+{% endblock %}

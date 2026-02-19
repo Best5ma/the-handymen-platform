@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Rate Service | The Handymen</title></head>
+<body>
+    <div style="max-width: 500px; margin: auto; padding: 50px;">
+        <h2>Rate {{ handyman.username }}</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="background: #ffc107; border: none; padding: 10px; width: 100%;">Submit Rating</button>
+        </form>
+    </div>
+</body>
+</html>

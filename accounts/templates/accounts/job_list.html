@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Available Jobs | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Available <span class="text-success">Jobs</span></h1>
+        <p class="lead text-muted">Browse through jobs posted by clients</p>
+        <p class="text-muted">{{ total_jobs }} jobs available</p>
+    </div>
+
+    <!-- Search/filter bar -->
+    <div class="row mb-4">
+        <div class="col-md-10 mx-auto">
+            <form method="get" class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" name="location" class="form-control" placeholder="Location..." value="{{ request.GET.location }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="min_price" class="form-control" placeholder="Min Price" value="{{ request.GET.min_price }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="max_price" class="form-control" placeholder="Max Price" value="{{ request.GET.max_price }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Jobs grid -->
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title fw-bold mb-0">{{ job.title }}</h5>
+                        <span class="badge bg-warning">Open</span>
+                    </div>
+                    <p class="card-text text-muted mb-3">{{ job.description|truncatechars:100 }}</p>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-tag text-success me-2"></i>
+                            <span class="fw-bold text-success">KES {{ job.price }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                            <span>{{ job.location }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-info me-2"></i>
+                            <span>{{ job.created_at|timesince }} ago</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> {{ job.client.username }}
+                        </small>
+                        <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-success btn-sm">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <h4 class="text-muted">No jobs available</h4>
+            <p>Check back later or adjust your filters</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+    .badge {
+        padding: 8px 12px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Verified Artisans | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Our <span class="text-success">Verified Artisans</span></h1>
+        <p class="lead text-muted">Browse through our network of trusted professionals</p>
+        <p class="text-muted">{{ total_artisans }} skilled artisans available</p>
+    </div>
+
+    <!-- Search/Filter Bar -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <form method="get" class="d-flex gap-2">
+                <div class="flex-grow-1">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fas fa-search text-success"></i>
+                        </span>
+                        <input type="text"
+                               name="location"
+                               class="form-control form-control-lg border-start-0"
+                               placeholder="Filter by location (e.g., Nairobi, Mombasa)..."
+                               value="{{ request.GET.location }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg px-4">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+                {% if request.GET.location %}
+                    <a href="{% url 'artisans_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times"></i>
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Artisans Grid -->
+    <div class="row g-4">
+        {% for artisan in artisans %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <!-- Profile Image -->
+                <div class="position-relative">
+                    {% if artisan.profile.profile_photo %}
+                        <img src="{{ artisan.profile.profile_photo.url }}"
+                             class="card-img-top"
+                             style="height: 280px; object-fit: cover;"
+                             alt="{{ artisan.get_full_name|default:artisan.username }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center"
+                             style="height: 280px;">
+                            <i class="fas fa-user-circle fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+
+                    <!-- Verification Badge -->
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <span class="badge bg-success py-2 px-3">
+                            <i class="fas fa-check-circle me-1"></i>Verified
+                        </span>
+                    </div>
+
+                    <!-- Rating Badge -->
+                    <div class="position-absolute top-0 start-0 m-3">
+                        <span class="badge bg-warning text-dark py-2 px-3">
+                            <i class="fas fa-star me-1"></i>
+                            {% if artisan.avg_rating %}
+                                {{ artisan.avg_rating|floatformat:1 }}
+                            {% else %}
+                                New
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Artisan Info -->
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1">{{ artisan.get_full_name|default:artisan.username }}</h4>
+
+                    <!-- Location -->
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-map-marker-alt text-success me-2"></i>
+                        {{ artisan.profile.location|default:"Location not specified" }}
+                    </p>
+
+                    <!-- Skills/Specialization -->
+                    {% if artisan.profile.skills %}
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark me-1 mb-1 p-2">
+                            <i class="fas fa-tools text-success me-1"></i>{{ artisan.profile.skills }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Bio -->
+                    <p class="text-muted small mb-3">
+                        {{ artisan.profile.bio|truncatechars:120|default:"No bio provided" }}
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="row text-center mb-4 g-2">
+                        <div class="col-6">
+                            <div class="bg-light rounded-3 p-2">
+                                <h6 class="fw-bold mb-0">{{ artisan.review_count|default:0 }}</h6>
+                                <small class="text-muted">Reviews</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light rounded-3 p-2">
+                                <h6 class="fw-bold mb-0">{{ artisan.profile.experience_years|default:0 }}yrs</h6>
+                                <small class="text-muted">Experience</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'public_profile' artisan.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-user me-2"></i>View Full Profile
+                        </a>
+                        {% if user.is_authenticated and user.is_client %}
+                            <button class="btn btn-success"
+                                    onclick="openContactModal('{{ artisan.id }}', '{{ artisan.get_full_name|default:artisan.username }}')">
+                                <i class="fas fa-envelope me-2"></i>Contact Artisan
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- No Results Found -->
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-users fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">No artisans found</h4>
+                <p class="text-muted mb-4">
+                    {% if request.GET.location %}
+                        No verified artisans found in "{{ request.GET.location }}"
+                    {% else %}
+                        No verified artisans available at the moment.
+                    {% endif %}
+                </p>
+                {% if request.GET.location %}
+                    <a href="{% url 'artisans_list' %}" class="btn btn-success">
+                        <i class="fas fa-times me-2"></i>Clear Filter
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination (if needed) -->
+    {% if artisans.has_other_pages %}
+    <nav aria-label="Artisans pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if artisans.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ artisans.previous_page_number }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in artisans.paginator.page_range %}
+                {% if artisans.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link bg-success border-success">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link text-success" href="?page={{ num }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if artisans.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ artisans.next_page_number }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2"></i>Contact <span id="artisanName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm" method="post" action="{% url 'send_message' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="artisan_id" id="artisanId">
+
+                    <div class="mb-3">
+                        <label for="subject" class="form-label fw-bold">Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject"
+                               placeholder="What would you like to discuss?" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="message" class="form-label fw-bold">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="4"
+                                  placeholder="Write your message here..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label fw-bold">Your Phone Number (Optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone"
+                               placeholder="e.g., 0712345678">
+                        <small class="text-muted">So the artisan can reach you directly</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="submit" form="contactForm" class="btn btn-success">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    overflow: hidden;
+}
+.hover-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+}
+.hover-card .card-img-top {
+    transition: transform 0.5s ease;
+}
+.hover-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+.badge {
+    font-weight: 500;
+    border-radius: 50px;
+}
+.page-link {
+    border: none;
+    margin: 0 5px;
+    border-radius: 10px;
+    color: #1e293b;
+    font-weight: 600;
+}
+.page-link:hover {
+    background-color: #22c55e;
+    color: white;
+}
+.page-item.active .page-link {
+    background-color: #22c55e;
+    border-color: #22c55e;
+}
+.modal-content {
+    border-radius: 15px;
+    border: none;
+}
+.modal-header {
+    border-radius: 15px 15px 0 0;
+}
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 10px 20px;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+.btn-outline-success {
+    border: 2px solid #22c55e;
+    color: #22c55e;
+}
+.btn-outline-success:hover {
+    background-color: #22c55e;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+</style>
+
+<script>
+function openContactModal(artisanId, artisanName) {
+    document.getElementById('artisanId').value = artisanId;
+    document.getElementById('artisanName').textContent = artisanName;
+
+    // Pre-fill subject
+    document.getElementById('subject').value = 'Inquiry about your services';
+
+    // Show the modal
+    var modal = new bootstrap.Modal(document.getElementById('contactModal'));
+    modal.show();
+}
+
+// Optional: Add animation on scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.hover-card');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = 1;
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+
+    cards.forEach(card => {
+        card.style.opacity = 0;
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

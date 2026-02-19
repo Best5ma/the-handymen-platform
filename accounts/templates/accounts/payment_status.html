@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Status | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header {% if simulation_mode %}bg-info{% else %}bg-success{% endif %} text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas {% if simulation_mode %}fa-flask{% else %}fa-credit-card{% endif %} me-2"></i>
+                        {% if simulation_mode %}Simulation Mode{% else %}Payment Status{% endif %}
+                    </h4>
+                </div>
+
+                <div class="card-body text-center p-5">
+
+                    {% if simulation_mode %}
+                    <!-- Simulation Mode Banner -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-flask fa-2x mb-2"></i>
+                        <h5 class="fw-bold">Simulation Mode Active</h5>
+                        <p class="small mb-0">No real money will be moved. This is for testing only.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Animated Spinner -->
+                    <div class="spinner-wrapper mb-4">
+                        <div class="spinner-border text-success" style="width: 5rem; height: 5rem;" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        {% if simulation_mode %}
+                        <div class="mt-2">
+                            <span class="badge bg-info">Simulated Transaction</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Status Title -->
+                    <h3 class="fw-bold mb-3">Processing Payment</h3>
+
+                    <!-- Status Message -->
+                    {% if simulation_mode %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-flask me-2"></i>
+                        <strong>SIMULATION MODE:</strong> In test mode, payment will auto-complete in 3 seconds.
+                    </div>
+                    <p class="text-muted mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No actual M-Pesa transaction is being processed.
+                    </p>
+                    {% else %}
+                    <p class="text-muted mb-4">
+                        <i class="fas fa-clock me-2"></i>
+                        Please check your phone and enter your M-Pesa PIN to complete the transaction.
+                    </p>
+                    {% endif %}
+
+                    <!-- Job Information Card -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Transaction Details</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Job:</span>
+                                <span class="fw-bold">{{ job.title }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Amount:</span>
+                                <span class="fw-bold text-success">KES {{ job.price }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Handyman:</span>
+                                <span class="fw-bold">{{ job.hired_worker.get_full_name|default:job.hired_worker.username }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Phone Number:</span>
+                                <span class="fw-bold">{{ request.session.payment_phone|default:"254712345678" }}</span>
+                            </div>
+
+                            {% if simulation_mode %}
+                            <hr>
+                            <div class="text-start small text-muted">
+                                <i class="fas fa-flask me-1"></i>
+                                <strong>Simulation Receipt:</strong> SIM{{ job.id }}{{ job.price|floatformat:"0" }}123
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Transaction Status Timeline -->
+                    <div class="timeline mb-4">
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Payment Initiated</h6>
+                                <small class="text-muted">{{ job.updated_at|timesince }} ago</small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Processing Payment</h6>
+                                <small class="text-muted">Waiting for confirmation...</small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-secondary">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Payment in Escrow</h6>
+                                <small class="text-muted">Pending confirmation</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+
+                        {% if simulation_mode %}
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-2" id="submitBtn">
+                            <i class="fas fa-flask me-2"></i>
+                            Complete Simulated Payment
+                        </button>
+                        <p class="small text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Click to simulate successful payment
+                        </p>
+                        {% else %}
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-2" id="submitBtn">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            Check Payment Status
+                        </button>
+                        <p class="small text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Click to check if payment was completed
+                        </p>
+                        {% endif %}
+                    </form>
+
+                    <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Job Details
+                    </a>
+
+                    <!-- Security Notice -->
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="d-flex justify-content-center gap-3">
+                            <span class="small text-muted">
+                                <i class="fas fa-shield-alt text-success me-1"></i>
+                                {% if simulation_mode %}Simulated Transaction{% else %}Secured by Safaricom{% endif %}
+                            </span>
+                            <span class="small text-muted">
+                                <i class="fas fa-lock text-success me-1"></i>
+                                End-to-End Encrypted
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-question-circle text-success me-2"></i>Need Help?</h6>
+
+                    {% if simulation_mode %}
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-flask me-2"></i>
+                        <strong>Simulation Mode:</strong> No actual payment is being processed.
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Click "Complete Simulated Payment" to simulate a successful transaction.
+                    </p>
+                    {% else %}
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-clock me-2"></i>
+                        Payments usually take 30-60 seconds to process.
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-phone me-2"></i>
+                        Didn't receive the STK push? Try checking your network or try again.
+                    </p>
+                    {% endif %}
+
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-headset me-2"></i>
+                        Contact support: <a href="mailto:support@thehandymen.co.ke">support@thehandymen.co.ke</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-submit/Refresh Scripts -->
+{% if simulation_mode %}
+<script>
+// Auto-submit after 3 seconds in simulation mode
+setTimeout(function() {
+    document.querySelector('form').submit();
+}, 3000);
+
+// Update button text to show auto-submit countdown
+let seconds = 3;
+const btn = document.getElementById('submitBtn');
+const interval = setInterval(function() {
+    seconds--;
+    if (btn && seconds > 0) {
+        btn.innerHTML = `<i class="fas fa-flask me-2"></i>Auto-completing in ${seconds}s...`;
+    } else {
+        clearInterval(interval);
+    }
+}, 1000);
+</script>
+{% else %}
+<script>
+// Auto-refresh every 5 seconds in real mode to check status
+setTimeout(function() {
+    location.reload();
+}, 5000);
+
+// Show refresh indicator
+let refreshSeconds = 5;
+const btn = document.getElementById('submitBtn');
+const interval = setInterval(function() {
+    refreshSeconds--;
+    if (btn && refreshSeconds > 0) {
+        btn.innerHTML = `<i class="fas fa-sync-alt me-2"></i>Auto-refresh in ${refreshSeconds}s...`;
+    } else {
+        clearInterval(interval);
+    }
+}, 1000);
+</script>
+{% endif %}
+
+<script>
+// Disable double-click on submit button
+document.getElementById('submitBtn').addEventListener('click', function(e) {
+    this.disabled = true;
+    if ({% if simulation_mode %}true{% else %}false{% endif %}) {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Completing...';
+    } else {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking...';
+    }
+});
+</script>
+
+<style>
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.timeline-badge.bg-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.timeline-badge.bg-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.timeline-badge.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    opacity: 0.5;
+}
+
+.timeline-content {
+    flex-grow: 1;
+    text-align: left;
+    padding-top: 5px;
+}
+
+.timeline-content h6 {
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+/* Animation for spinner */
+.spinner-border {
+    animation: spinner-border 1s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #22c55e;
+    color: #22c55e;
+    transform: translateY(-2px);
+}
+
+/* Alert styling */
+.alert {
+    border: none;
+    border-radius: 12px;
+}
+
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* Badge styling */
+.badge {
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+
+    .timeline-badge {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}

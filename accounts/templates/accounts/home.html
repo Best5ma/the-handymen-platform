@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+
+{% block title %}The Handymen | Expertise You Can Trust{% endblock %}
+
+{% block content %}
+<style>
+    /* High-Impact Styling */
+    .hero-section {
+        background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)),
+                    url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+        background-size: cover;
+        background-position: center;
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        margin-top: -1.5rem; /* Pulls up to meet navbar */
+        border-radius: 0 0 50px 50px;
+    }
+    .text-spacing { letter-spacing: 5px; }
+    .artisan-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .artisan-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.15) !important;
+    }
+    .btn-cta {
+        padding: 15px 40px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        transition: 0.3s;
+    }
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        color: white;
+        font-size: 32px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transition: 0.3s;
+    }
+    .stat-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .category-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(255,255,255,0.95);
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #0f172a;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .rating-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #fbbf24;
+        color: #0f172a;
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .trust-badge {
+        background: #0f172a;
+        color: white;
+        padding: 60px 0;
+        border-radius: 50px;
+        margin: 40px 0;
+    }
+</style>
+
+<!-- 1. FULL-SCREEN HERO SECTION WITH REAL IMAGE -->
+<div class="hero-section text-center text-white overflow-hidden mb-5">
+    <div class="container py-5">
+        <div class="col-lg-10 mx-auto">
+            <div class="mb-4">
+                <span class="badge bg-warning text-dark px-4 py-2 rounded-pill fw-bold mb-4">🇰🇪 KENYA'S MOST TRUSTED MARKETPLACE</span>
+            </div>
+            <h1 class="display-1 fw-black text-uppercase mb-3">EXPERT HANDYMEN</h1>
+            <h5 class="text-warning fw-bold text-spacing mb-4">AT YOUR FINGERTIPS</h5>
+            <p class="lead mb-5 fs-4 px-md-5 mx-auto" style="max-width: 800px;">
+                Kenya's premier marketplace connecting you with <strong class="text-warning">vetted professionals</strong>.
+                Pay securely via M-Pesa Escrow only when the job is done.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'signup' %}" class="btn btn-warning btn-lg btn-cta rounded-pill shadow">👉 FIND A HANDYMAN</a>
+                <a href="#how-it-works" class="btn btn-outline-light btn-lg btn-cta rounded-pill">📋 HOW IT WORKS</a>
+            </div>
+
+            <!-- Trust badges -->
+            <div class="row mt-5 pt-5 justify-content-center">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <span class="fs-1 me-2">🔒</span>
+                        <span class="fw-bold">M-Pesa Escrow</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <span class="fs-1 me-2">✅</span>
+                        <span class="fw-bold">Vetted Pros</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <span class="fs-1 me-2">⭐</span>
+                        <span class="fw-bold">5,000+ Reviews</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HOW IT WORKS SECTION -->
+<div id="how-it-works" class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold display-5">How It <span class="text-success">Works</span></h2>
+        <div class="mx-auto bg-success mb-4" style="height: 4px; width: 80px;"></div>
+        <p class="text-muted fs-5">Three simple steps to get your job done perfectly</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="feature-icon">1️⃣</div>
+                <h4 class="fw-bold mb-3">Find a Pro</h4>
+                <p class="text-muted">Browse through our list of vetted professionals with verified credentials and real reviews.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="feature-icon">2️⃣</div>
+                <h4 class="fw-bold mb-3">Pay via Escrow</h4>
+                <p class="text-muted">Funds are held securely. The artisan only gets paid AFTER you approve the work.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="feature-icon">3️⃣</div>
+                <h4 class="fw-bold mb-3">Job Complete</h4>
+                <p class="text-muted">Release payment when satisfied. Leave a review to help others.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STATS SECTION -->
+<div class="trust-badge container-fluid">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3 col-6">
+                <h2 class="display-4 fw-bold text-warning">500+</h2>
+                <p class="fs-5">Vetted Artisans</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="display-4 fw-bold text-warning">5,000+</h2>
+                <p class="fs-5">Jobs Completed</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="display-4 fw-bold text-warning">4.9★</h2>
+                <p class="fs-5">Average Rating</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h2 class="display-4 fw-bold text-warning">24/7</h2>
+                <p class="fs-5">Customer Support</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. FEATURED ARTISANS (Vibrant Grid with REAL Images) -->
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold display-5">Featured <span class="text-success">Professionals</span></h2>
+        <div class="mx-auto bg-success mb-3" style="height: 4px; width: 60px;"></div>
+        <p class="text-muted fs-5">Meet some of our top-rated experts ready to help you</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Artisan 1 - Plumber with REAL image -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow h-100 artisan-card">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80"
+                         class="card-img-top"
+                         style="height: 320px; object-fit: cover;"
+                         alt="Professional plumber">
+                    <span class="category-badge">🔧 Plumbing</span>
+                    <span class="rating-badge">⭐ 4.9 (128 jobs)</span>
+                </div>
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1">Samuel Maina</h4>
+                    <p class="text-muted small mb-3">✓ 8+ years experience</p>
+                    <p class="mb-3">Specializing in solar water heating, bathroom installations, and drainage systems.</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🚿 Solar</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🔨 Repairs</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">💧 Drainage</span>
+                    </div>
+                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Artisan 2 - Electrician with REAL image -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow h-100 artisan-card">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80"
+                         class="card-img-top"
+                         style="height: 320px; object-fit: cover;"
+                         alt="Professional electrician">
+                    <span class="category-badge">⚡ Electrical</span>
+                    <span class="rating-badge">⭐ 5.0 (95 jobs)</span>
+                </div>
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1">Jane Wambui</h4>
+                    <p class="text-muted small mb-3">✓ Certified Electrician (EPRA)</p>
+                    <p class="mb-3">Expert in industrial wiring, smart-home automation, and solar installations.</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🏭 Industrial</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🏠 Smart Home</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">☀️ Solar</span>
+                    </div>
+                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Artisan 3 - Carpenter with REAL image -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow h-100 artisan-card">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1617529497471-9218633199c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                         class="card-img-top"
+                         style="height: 320px; object-fit: cover;"
+                         alt="Professional carpenter">
+                    <span class="category-badge">🪚 Carpentry</span>
+                    <span class="rating-badge">⭐ 4.8 (76 jobs)</span>
+                </div>
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-1">David Otieno</h4>
+                    <p class="text-muted small mb-3">✓ Master Carpenter</p>
+                    <p class="mb-3">Specialist in custom furniture, kitchen cabinetry, and interior woodwork.</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🪑 Furniture</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🚪 Doors</span>
+                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🔨 Renovation</span>
+                    </div>
+                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{% url 'signup' %}" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">👥 BROWSE ALL ARTISANS</a>
+    </div>
+</div>
+
+<!-- 3. TRUST SECTION WITH REAL IMAGE -->
+<div id="about" class="container py-5">
+    <div class="row align-items-center bg-white p-5 rounded-5 shadow-lg border">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill mb-3">WHY CHOOSE US</span>
+            <h2 class="fw-bold mb-4 display-6">Building <span class="text-success">Trust</span> in Every Job, Every Time</h2>
+            <p class="lead mb-4 text-muted">We're revolutionizing how Kenyans find and hire skilled professionals.</p>
+            <ul class="list-unstyled">
+                <li class="mb-4 d-flex">
+                    <span class="fs-3 me-3">💰</span>
+                    <div>
+                        <strong class="fs-5">M-Pesa Escrow Protection:</strong>
+                        <p class="text-muted mb-0">Your money stays in our secure account until you're 100% satisfied with the work.</p>
+                    </div>
+                </li>
+                <li class="mb-4 d-flex">
+                    <span class="fs-3 me-3">📋</span>
+                    <div>
+                        <strong class="fs-5">Vetted CVs & Credentials:</strong>
+                        <p class="text-muted mb-0">We manually verify every artisan's documents, licenses, and experience.</p>
+                    </div>
+                </li>
+                <li class="mb-4 d-flex">
+                    <span class="fs-3 me-3">⭐</span>
+                    <div>
+                        <strong class="fs-5">Verified Reviews:</strong>
+                        <p class="text-muted mb-0">Only real clients who paid through our platform can leave ratings.</p>
+                    </div>
+                </li>
+                <li class="mb-4 d-flex">
+                    <span class="fs-3 me-3">🛡️</span>
+                    <div>
+                        <strong class="fs-5">7-Day Warranty:</strong>
+                        <p class="text-muted mb-0">All work comes with a 7-day warranty - we guarantee quality.</p>
+                    </div>
+                </li>
+            </ul>
+            <a href="{% url 'signup' %}" class="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold mt-3">GET STARTED TODAY</a>
+        </div>
+        <div class="col-lg-6">
+            <img src="https://images.unsplash.com/photo-1543269664-7eef42226a21?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                 class="img-fluid rounded-5 shadow-lg"
+                 alt="Handyman working"
+                 style="height: 600px; object-fit: cover; width: 100%;">
+        </div>
+    </div>
+</div>
+
+<!-- POPULAR CATEGORIES -->
+<div class="container py-5">
+    <h2 class="text-center fw-bold mb-5 display-6">Popular <span class="text-success">Categories</span></h2>
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="fs-1 mb-3">🔧</span>
+                <h5 class="fw-bold">Plumbing</h5>
+                <p class="text-muted small">243 artisans</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="fs-1 mb-3">⚡</span>
+                <h5 class="fw-bold">Electrical</h5>
+                <p class="text-muted small">187 artisans</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="fs-1 mb-3">🪚</span>
+                <h5 class="fw-bold">Carpentry</h5>
+                <p class="text-muted small">156 artisans</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="fs-1 mb-3">🎨</span>
+                <h5 class="fw-bold">Painting</h5>
+                <p class="text-muted small">98 artisans</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. FAQ SECTION (Improved) -->
+<div id="faq" class="container py-5 mb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold display-6">Frequently Asked <span class="text-success">Questions</span></h2>
+        <p class="text-muted fs-5">Everything you need to know about The Handymen</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="accordion accordion-flush shadow rounded-4 overflow-hidden border" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            <span class="fs-5 me-3">💰</span> How does the M-Pesa Escrow protect me?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            When you make a payment, the funds are held in our secure M-Pesa Escrow account. The artisan is notified that payment is ready, but they don't receive a single shilling until YOU confirm the job is complete. You have 48 hours to inspect the work - if you're not satisfied, we help mediate and can return your funds.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            <span class="fs-5 me-3">✅</span> How do you verify artisans' skills?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            Every artisan undergoes a rigorous verification process: we check their government-issued ID, review their certificates and training documents, call their references, and conduct a short interview. Only after passing all these steps can they join our platform.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            <span class="fs-5 me-3">💳</span> What payment methods do you accept?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            We primarily use M-Pesa for all transactions - it's fast, secure, and accessible to all Kenyans. Simply send the agreed amount to our paybill number, and we'll hold it in escrow until the job is complete.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            <span class="fs-5 me-3">📞</span> What if something goes wrong?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            Our customer support team is available 24/7 to help resolve any disputes. Since funds are held in escrow, we can mediate and ensure a fair outcome. Plus, all work comes with a 7-day warranty - if issues arise within a week, we'll help make it right.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CALL TO ACTION BANNER -->
+<div class="container py-5">
+    <div class="bg-success p-5 rounded-5 text-white text-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+        <h2 class="display-5 fw-bold mb-4">Ready to get your job done right?</h2>
+        <p class="lead mb-4 fs-3">Join thousands of satisfied customers who found their perfect handyman</p>
+        <a href="{% url 'signup' %}" class="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold fs-5">👉 CREATE FREE ACCOUNT</a>
+        <p class="mt-4 small opacity-75">No credit card required • Free to browse</p>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-dark text-white py-5 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h4 class="fw-bold text-warning mb-3">🛠️ THE HANDYMEN</h4>
+                <p class="small opacity-75">Kenya's most trusted marketplace connecting clients with verified professional handymen.</p>
+                <div class="d-flex gap-3">
+                    <span class="badge bg-light text-dark p-3 rounded-circle">📘</span>
+                    <span class="badge bg-light text-dark p-3 rounded-circle">📱</span>
+                    <span class="badge bg-light text-dark p-3 rounded-circle">📧</span>
+                </div>
+            </div>
+            <div class="col-md-2 mb-4">
+                <h6 class="fw-bold mb-3">Quick Links</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">How It Works</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQs</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h6 class="fw-bold mb-3">Contact Info</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">📍 Ruiru, Kenya</li>
+                    <li class="mb-2">📞 +254 700 000 000</li>
+                    <li class="mb-2">✉️ hello@thehandymen.co.ke</li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h6 class="fw-bold mb-3">Download App</h6>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-secondary p-3">Google Play</span>
+                    <span class="badge bg-secondary p-3">App Store</span>
+                </div>
+            </div>
+        </div>
+        <hr class="opacity-25">
+        <div class="text-center small opacity-75">
+            <p class="mb-0">© 2026 The Handymen Marketplace. All rights reserved. | Privacy Policy | Terms of Service</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Job Completion{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Request Job Completion</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-hand-paper fa-4x text-primary mb-3"></i>
+
+                    <h3 class="fw-bold mb-3">Mark Job as Complete?</h3>
+                    <p class="text-muted mb-4">
+                        Notify the client that you have finished the job and request payment release.
+                    </p>
+
+                    <!-- Job Info -->
+                    <div class="alert alert-light border text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Job:</span>
+                            <span class="fw-bold">{{ job.title }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Amount in Escrow:</span>
+                            <span class="fw-bold text-success">KES {{ job.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Client:</span>
+                            <span class="fw-bold">{{ job.client.get_full_name|default:job.client.username }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Hired on:</span>
+                            <span class="fw-bold">{{ job.updated_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info text-start mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Once you request completion, the client will be notified and can release payment after reviewing your work.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Completion Message (optional)</label>
+                            <textarea name="message" class="form-control" rows="4"
+                                      placeholder="Tell the client about the work completed, any challenges, or next steps..."></textarea>
+                            <small class="text-muted">A brief message helps the client understand what was accomplished.</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Are you sure you want to mark this job as complete?')">
+                                <i class="fas fa-paper-plane me-2"></i>Send Completion Request
+                            </button>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Tips for a Smooth Completion</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Take photos of the completed work</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>List all tasks you completed</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Mention any materials used</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Be professional and courteous in your message</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Remind the client to review and release payment</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+}
+.card-header {
+    border-bottom: none;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+.btn-outline-secondary {
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-outline-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #3b82f6;
+    color: #3b82f6;
+    transform: translateY(-2px);
+}
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: none;
+    border-radius: 12px;
+}
+</style>
+{% endblock %}

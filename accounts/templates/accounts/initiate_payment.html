@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Pay to Escrow | {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header {% if settings.MPESA_SIMULATION_MODE %}bg-info{% else %}bg-success{% endif %} text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas {% if settings.MPESA_SIMULATION_MODE %}fa-flask{% else %}fa-lock{% endif %} me-2"></i>
+                        {% if settings.MPESA_SIMULATION_MODE %}Simulation Mode - {% endif %}Pay to Escrow
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+
+                    {% if settings.MPESA_SIMULATION_MODE %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-flask fa-2x mb-2"></i>
+                        <h5 class="fw-bold">Simulation Mode Active</h5>
+                        <p class="small mb-0">No real money will be moved. Enter any phone number for testing.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Job Summary -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Job:</span>
+                            <span class="fw-bold">{{ job.title }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Amount:</span>
+                            <span class="fw-bold text-success fs-5">KES {{ job.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Handyman:</span>
+                            <span class="fw-bold">{{ job.hired_worker.get_full_name|default:job.hired_worker.username }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Job ID:</span>
+                            <span class="fw-bold">#{{ job.id }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Important Info -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Escrow Protection:</strong> Your money will be held securely until you confirm the job is complete.
+                    </div>
+
+                    <form method="post" id="paymentForm">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold fs-5">
+                                <i class="fas fa-mobile-alt text-success me-2"></i>M-Pesa Phone Number
+                            </label>
+
+                            {% if settings.MPESA_SIMULATION_MODE %}
+                            <div class="mb-2">
+                                <small class="text-info">
+                                    <i class="fas fa-flask me-1"></i>
+                                    Simulation: Any number works. Examples below:
+                                </small>
+                            </div>
+                            {% endif %}
+
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">254</span>
+                                <input type="text"
+                                       name="phone_number"
+                                       class="form-control form-control-lg"
+                                       placeholder="712345678"
+                                       value="712345678"
+                                       required>
+                            </div>
+
+                            <div class="mt-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Enter your M-Pesa number in any of these formats:
+                                </small>
+                                <div class="d-flex gap-3 mt-1 flex-wrap">
+                                    <span class="badge bg-light text-dark">712345678</span>
+                                    <span class="badge bg-light text-dark">0712345678</span>
+                                    <span class="badge bg-light text-dark">254712345678</span>
+                                </div>
+                            </div>
+
+                            <!-- Hidden field to store formatted number -->
+                            <input type="hidden" name="formatted_number" id="formatted_number" value="">
+                        </div>
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-receipt me-2"></i>Payment Summary</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Job Amount:</span>
+                                    <span class="fw-bold">KES {{ job.price }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Transaction Fee:</span>
+                                    <span class="fw-bold">KES 0</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">Total to Pay:</span>
+                                    <span class="fw-bold text-success fs-5">KES {{ job.price }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if settings.MPESA_SIMULATION_MODE %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-flask me-2"></i>
+                            <strong>Simulation:</strong> No actual STK push will be sent. Click proceed to simulate payment.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock me-2"></i>
+                            You will receive an STK push on <strong>254{{ request.session.payment_phone|default:"712345678" }}</strong>.
+                            Enter your M-Pesa PIN to complete payment.
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-success btn-lg w-100" id="submitBtn">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            {% if settings.MPESA_SIMULATION_MODE %}Simulate Payment{% else %}Proceed to Pay{% endif %}
+                        </button>
+
+                        <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Number Buttons for Testing -->
+            {% if settings.MPESA_SIMULATION_MODE %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-flask text-info me-2"></i>Test Numbers (Click to fill)</h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-info btn-sm" onclick="fillNumber('712345678')">712345678</button>
+                        <button class="btn btn-outline-info btn-sm" onclick="fillNumber('0712345678')">0712345678</button>
+                        <button class="btn btn-outline-info btn-sm" onclick="fillNumber('254712345678')">254712345678</button>
+                        <button class="btn btn-outline-info btn-sm" onclick="fillNumber('723456789')">723456789</button>
+                        <button class="btn btn-outline-info btn-sm" onclick="fillNumber('0112345678')">0112345678</button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Security Badges -->
+            <div class="row mt-4 text-center">
+                <div class="col-4">
+                    <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                    <p class="small mb-0">Secured by Safaricom</p>
+                </div>
+                <div class="col-4">
+                    <i class="fas fa-lock fa-2x text-success mb-2"></i>
+                    <p class="small mb-0">End-to-End Encrypted</p>
+                </div>
+                <div class="col-4">
+                    <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                    <p class="small mb-0">Instant Processing</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Function to fill phone number from test buttons
+function fillNumber(number) {
+    const input = document.querySelector('input[name="phone_number"]');
+    input.value = number;
+    input.focus();
+}
+
+// Format phone number as user types (optional)
+document.querySelector('input[name="phone_number"]').addEventListener('input', function(e) {
+    // Remove any non-digit characters
+    this.value = this.value.replace(/\D/g, '');
+});
+
+// Prevent double submission
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    btn.disabled = true;
+});
+
+// Add animation to test buttons
+document.querySelectorAll('.btn-outline-info').forEach(btn => {
+    btn.addEventListener('click', function() {
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 100);
+    });
+});
+</script>
+
+<style>
+.btn-outline-info {
+    border: 1px solid #0dcaf0;
+    color: #0dcaf0;
+    transition: all 0.3s;
+}
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 202, 240, 0.3);
+}
+.card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 15px;
+    overflow: hidden;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+}
+.card-header {
+    border-bottom: none;
+}
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+.btn-outline-secondary {
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-outline-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #22c55e;
+    color: #22c55e;
+    transform: translateY(-2px);
+}
+.alert {
+    border: none;
+    border-radius: 12px;
+}
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.badge {
+    padding: 8px 12px;
+    font-weight: 600;
+}
+.input-group-text {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-right: none;
+    font-weight: 600;
+    color: #22c55e;
+}
+.form-control:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
+}
+</style>
+{% endblock %}

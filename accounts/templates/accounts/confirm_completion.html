@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Job Completion{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Confirm Job Completion</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-clipboard-check fa-4x text-success mb-3"></i>
+
+                    <h3 class="fw-bold mb-3">Is the job complete?</h3>
+                    <p class="text-muted mb-4">
+                        Please confirm that <strong>{{ job.hired_worker.get_full_name|default:job.hired_worker.username }}</strong>
+                        has completed the job to your satisfaction.
+                    </p>
+
+                    <!-- Job Info -->
+                    <div class="alert alert-light border text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Job:</span>
+                            <span class="fw-bold">{{ job.title }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Amount in Escrow:</span>
+                            <span class="fw-bold text-success">KES {{ job.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Handyman:</span>
+                            <span class="fw-bold">{{ job.hired_worker.get_full_name|default:job.hired_worker.username }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Hired on:</span>
+                            <span class="fw-bold">{{ job.updated_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Handyman's Completion Message (if any) -->
+                    {% if job.completion_requested %}
+                    <div class="alert alert-info text-start mb-4">
+                        <i class="fas fa-comment me-2"></i>
+                        <strong>Handyman's Message:</strong>
+                        <p class="mb-0 mt-2">{{ request.session.completion_message|default:"The handyman has marked this job as complete. Please review the work." }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> Once you confirm, the payment will be automatically released
+                        to the handyman's M-Pesa. This action cannot be undone.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Rate the handyman (optional but appreciated)</label>
+                            <div class="rating-stars mb-2 text-center">
+                                <span class="star" data-rating="1">⭐</span>
+                                <span class="star" data-rating="2">⭐</span>
+                                <span class="star" data-rating="3">⭐</span>
+                                <span class="star" data-rating="4">⭐</span>
+                                <span class="star" data-rating="5">⭐</span>
+                            </div>
+                            <input type="hidden" name="rating" id="rating" value="5">
+
+                            <label class="form-label fw-bold mt-3">Review Comment (optional)</label>
+                            <textarea name="review_comment" class="form-control" rows="3"
+                                      placeholder="Share your experience working with this handyman..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg"
+                                    onclick="return confirm('Are you sure you want to release payment? This action cannot be undone.')">
+                                <i class="fas fa-check-circle me-2"></i>Yes, Confirm & Release Payment
+                            </button>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- What Happens Next Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-clock text-success me-2"></i>What happens next?</h6>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">You confirm completion</h6>
+                                <small class="text-muted">Current step</small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-secondary">
+                                <i class="fas fa-money-bill"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Payment released to handyman</h6>
+                                <small class="text-muted">KES {{ job.price }} sent to M-Pesa</small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-badge bg-secondary">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Job marked complete</h6>
+                                <small class="text-muted">Both parties can leave reviews</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Star rating functionality
+document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', function() {
+        const rating = this.dataset.rating;
+        document.getElementById('rating').value = rating;
+
+        // Highlight stars
+        document.querySelectorAll('.star').forEach((s, index) => {
+            if (index < rating) {
+                s.style.opacity = '1';
+                s.style.transform = 'scale(1.1)';
+            } else {
+                s.style.opacity = '0.3';
+                s.style.transform = 'scale(1)';
+            }
+        });
+    });
+});
+
+// Add hover effects
+document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('mouseover', function() {
+        const rating = this.dataset.rating;
+        document.querySelectorAll('.star').forEach((s, index) => {
+            if (index < rating) {
+                s.style.opacity = '0.8';
+            }
+        });
+    });
+
+    star.addEventListener('mouseout', function() {
+        const currentRating = document.getElementById('rating').value;
+        document.querySelectorAll('.star').forEach((s, index) => {
+            if (index < currentRating) {
+                s.style.opacity = '1';
+            } else {
+                s.style.opacity = '0.3';
+            }
+        });
+    });
+});
+
+// Set default rating (5 stars)
+window.onload = function() {
+    document.querySelectorAll('.star').forEach((s, index) => {
+        if (index < 5) {
+            s.style.opacity = '1';
+        }
+    });
+};
+</script>
+
+<style>
+.rating-stars {
+    font-size: 2.5rem;
+    cursor: pointer;
+}
+.rating-stars .star {
+    opacity: 0.3;
+    transition: all 0.2s;
+    display: inline-block;
+    margin: 0 5px;
+}
+.rating-stars .star:hover {
+    opacity: 0.8;
+    transform: scale(1.2) !important;
+}
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+}
+.card-header {
+    border-bottom: none;
+}
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+.btn-outline-secondary {
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-outline-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #22c55e;
+    color: #22c55e;
+    transform: translateY(-2px);
+}
+.alert-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: none;
+    border-radius: 12px;
+}
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: none;
+    border-radius: 12px;
+}
+
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding: 10px 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.timeline-badge.bg-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.timeline-badge.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.timeline-content {
+    flex-grow: 1;
+    text-align: left;
+    padding-top: 5px;
+}
+
+.timeline-content h6 {
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
