@@ -3,20 +3,23 @@ import random
 import base64
 import requests
 import re
+import hashlib
 from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.urls import reverse_lazy, reverse
 from django.views import generic
 from django.conf import settings
 from django.db.models import Avg, Q, Count, Sum
 from django.contrib import messages
 from django.utils import timezone
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from .models import Job, Profile, User, Review, Bid, Transaction, Notification, Dispute, Withdrawal, EscrowLog
 from .forms import ProfileForm, JobForm, HandymanSignUpForm, ReviewForm, BidForm
@@ -25,15 +28,20 @@ from .mpesa import MpesaClient
 
 # ==================== 1. LANDING PAGE ====================
 def home_view(request):
-    """Homepage view"""
+    """Homepage view with real verified artisans"""
     latest_reviews = Review.objects.all().order_by('-created_at')[:3]
 
+    # Get actual verified handymen from your database with real stats
     featured_artisans = User.objects.filter(
         is_handyman=True,
         profile__is_verified=True
-    ).select_related('profile')[:3]
+    ).select_related('profile').annotate(
+        avg_rating=Avg('reviews_received__rating'),
+        review_count=Count('reviews_received'),
+        job_count=Count('hired_jobs', filter=Q(hired_jobs__status='completed'))
+    )[:6]  # Show up to 6 artisans
 
-    total_artisans = User.objects.filter(is_handyman=True).count()
+    total_artisans = User.objects.filter(is_handyman=True, profile__is_verified=True).count()
     total_jobs = Job.objects.filter(is_completed=True).count()
 
     context = {
@@ -45,35 +53,112 @@ def home_view(request):
     return render(request, 'accounts/home.html', context)
 
 
-# ==================== 2. EMAIL VERIFICATION ====================
+# ==================== 2. EMAIL VERIFICATION (ENHANCED) ====================
 @login_required
 def send_verification_email(request):
-    """Send email verification code"""
+    """Send email verification code with HTML template"""
+    # Generate a 6-digit code
     code = str(random.randint(100000, 999999))
+
+    # Create a verification token (for clickable link)
+    token = hashlib.sha256(f"{request.user.email}{code}{timezone.now()}".encode()).hexdigest()[:20]
+
+    # Store in session
     request.session['verification_code'] = code
-    print(f"DEBUG: The code generated is {code}")
-    send_mail(
-        'The Handymen: Your Verification Code',
-        f'Welcome! Use this code to verify your account: {code}',
-        settings.DEFAULT_FROM_EMAIL,
-        [request.user.email],
-        fail_silently=False,
-    )
+    request.session['verification_token'] = token
+    request.session['verification_sent_at'] = timezone.now().isoformat()
+
+    # Create verification link
+    verification_link = f"{settings.SITE_URL}{reverse('verify_email_page')}?token={token}&code={code}"
+
+    # Prepare email content
+    subject = '🔐 The Handymen - Verify Your Email Address'
+    html_content = render_to_string('registration/verification_email.html', {
+        'user': request.user,
+        'verification_code': code,
+        'verification_link': verification_link,
+    })
+    text_content = strip_tags(html_content)
+
+    try:
+        # Send email
+        email = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [request.user.email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
+        messages.success(request, f"✅ Verification code sent to {request.user.email}")
+        print(f"📧 Verification email sent to {request.user.email} with code: {code}")
+
+    except Exception as e:
+        messages.error(request, "❌ Failed to send verification email. Please try again.")
+        print(f"❌ Email error: {e}")
+
     return redirect('verify_email_page')
 
 
 @login_required
 def verify_email_page(request):
     """Verify email with code"""
+    # Check if user is already verified
+    if request.user.is_email_verified:
+        messages.info(request, "Your email is already verified.")
+        return redirect('dashboard')
+
+    # Auto-fill from URL parameters (for clickable link)
+    token_code = request.GET.get('code', '')
+    token = request.GET.get('token', '')
+
     if request.method == 'POST':
-        if request.POST.get('code') == request.session.get('verification_code'):
+        entered_code = request.POST.get('code', '')
+        stored_code = request.session.get('verification_code', '')
+
+        # Verify code
+        if entered_code == stored_code:
+            # Mark email as verified
             request.user.is_email_verified = True
             request.user.save()
-            messages.success(request, "Email verified! Welcome to the marketplace.")
+
+            # Clear session data
+            if 'verification_code' in request.session:
+                del request.session['verification_code']
+            if 'verification_token' in request.session:
+                del request.session['verification_token']
+
+            messages.success(request, "🎉 Email verified successfully! Welcome to the marketplace.")
+
+            # Send welcome email
+            try:
+                send_mail(
+                    'Welcome to The Handymen!',
+                    f'Hello {request.user.username},\n\nYour email has been verified. You can now start using the platform!\n\nBest regards,\nThe Handymen Team',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [request.user.email],
+                    fail_silently=True,
+                )
+            except:
+                pass
+
             return redirect('dashboard')
         else:
-            return render(request, 'accounts/verify_email.html', {'error': 'Invalid code. Please try again.'})
-    return render(request, 'accounts/verify_email.html')
+            messages.error(request, "❌ Invalid verification code. Please try again.")
+
+    context = {
+        'token_code': token_code,
+        'token': token,
+        'email': request.user.email,
+    }
+    return render(request, 'accounts/verify_email.html', context)
+
+
+@login_required
+def resend_verification_email(request):
+    """Resend verification email"""
+    return send_verification_email(request)
 
 
 # ==================== 3. MAIN DASHBOARD ====================
@@ -96,6 +181,7 @@ def dashboard(request):
         # Enhanced admin stats
         context['handyman_count'] = User.objects.filter(is_handyman=True).count()
         context['client_count'] = User.objects.filter(is_client=True).count()
+        context['verified_handyman_count'] = User.objects.filter(is_handyman=True, profile__is_verified=True).count()
         context['completed_jobs'] = Job.objects.filter(status='completed').count()
         context['open_jobs'] = Job.objects.filter(status='open').count()
         context['in_progress_jobs'] = Job.objects.filter(status='in_progress').count()
@@ -253,19 +339,25 @@ def post_job(request):
 
 # ==================== 5. VIEW ALL ARTISANS ====================
 def artisans_list(request):
-    """Public view to list all verified artisans"""
+    """Public view to list all verified artisans with real stats"""
     artisans = User.objects.filter(
         is_handyman=True,
         profile__is_verified=True
     ).select_related('profile').annotate(
         avg_rating=Avg('reviews_received__rating'),
-        review_count=Count('reviews_received')
-    )
+        review_count=Count('reviews_received'),
+        job_count=Count('hired_jobs', filter=Q(hired_jobs__status='completed'))
+    ).order_by('-avg_rating', '-job_count')
 
     # Filter by location if provided
     location = request.GET.get('location', '')
     if location:
         artisans = artisans.filter(profile__location__icontains=location)
+
+    # Filter by skill if provided
+    skill = request.GET.get('skill', '')
+    if skill:
+        artisans = artisans.filter(profile__skills__icontains=skill)
 
     return render(request, 'accounts/artisans_list.html', {
         'artisans': artisans,
@@ -300,7 +392,53 @@ def job_list(request):
     return render(request, 'accounts/job_list.html', context)
 
 
-# ==================== 7. JOB DETAIL VIEW ====================
+# ==================== 7. LOCATION SEARCH ====================
+def location_search(request):
+    """Location-based search page with direct context"""
+    from django.db.models import Count, Q
+
+    # Get handyman locations with counts
+    handyman_locations = Profile.objects.exclude(
+        location=''
+    ).values('location').annotate(
+        count=Count('user', filter=Q(user__is_handyman=True, user__profile__is_verified=True))
+    ).order_by('-count')[:10]
+
+    # Get job locations with counts
+    job_locations = Job.objects.filter(
+        status='open'
+    ).exclude(
+        location=''
+    ).values('location').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+
+    # Format handyman locations
+    formatted_handyman = []
+    for loc in handyman_locations:
+        if loc['location']:
+            formatted_handyman.append({
+                'location': loc['location'],
+                'count': loc['count']
+            })
+
+    # Format job locations
+    formatted_jobs = []
+    for loc in job_locations:
+        if loc['location']:
+            formatted_jobs.append({
+                'location': loc['location'],
+                'count': loc['count']
+            })
+
+    context = {
+        'handyman_locations': formatted_handyman,
+        'job_locations': formatted_jobs,
+    }
+    return render(request, 'accounts/location_search.html', context)
+
+
+# ==================== 8. JOB DETAIL VIEW ====================
 def job_detail(request, job_id):
     """View job details - public view for everyone"""
     job = get_object_or_404(Job, id=job_id)
@@ -363,12 +501,12 @@ def job_detail(request, job_id):
         'bid_count': bid_count,
         'transactions': transactions,
         'user_has_reviewed': user_has_reviewed,
-        'settings': settings,  # Pass settings to template for simulation mode
+        'settings': settings,
     }
     return render(request, 'accounts/job_detail.html', context)
 
 
-# ==================== 8. MARKETPLACE: BIDDING ====================
+# ==================== 9. MARKETPLACE: BIDDING ====================
 @login_required
 def place_bid(request, job_id):
     """Place a bid on a job"""
@@ -444,7 +582,7 @@ def place_bid(request, job_id):
     })
 
 
-# ==================== 9. HIRE WORKER ====================
+# ==================== 10. HIRE WORKER ====================
 @login_required
 def hire_worker(request, job_id, worker_id):
     """Hire a handyman for the job"""
@@ -500,7 +638,7 @@ def hire_worker(request, job_id, worker_id):
     return redirect('job_detail', job_id=job.id)
 
 
-# ==================== 10. PROFILES & REVIEWS ====================
+# ==================== 11. PROFILES & REVIEWS ====================
 @login_required
 def edit_profile(request):
     """Edit user profile"""
@@ -610,7 +748,7 @@ def leave_review(request, handyman_id):
     })
 
 
-# ==================== 11. SEARCH FUNCTIONALITY ====================
+# ==================== 12. SEARCH FUNCTIONALITY ====================
 def search(request):
     """Global search for jobs and artisans"""
     query = request.GET.get('q', '')
@@ -643,12 +781,18 @@ def search(request):
     return render(request, 'accounts/search_results.html', context)
 
 
-# ==================== 12. AUTHENTICATION ====================
+# ==================== 13. AUTHENTICATION ====================
 class SignUpView(generic.CreateView):
-    """User signup view"""
+    """User signup view with redirect handling"""
     form_class = HandymanSignUpForm
-    success_url = reverse_lazy('login')
     template_name = 'registration/signup.html'
+
+    def get_success_url(self):
+        """Redirect to login with next parameter if present"""
+        next_url = self.request.GET.get('next', '')
+        if next_url:
+            return reverse_lazy('login') + f'?next={next_url}'
+        return reverse_lazy('login')
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -656,7 +800,7 @@ class SignUpView(generic.CreateView):
         return response
 
 
-# ==================== 13. PAYMENTS ====================
+# ==================== 14. PAYMENTS ====================
 @login_required
 def pay_to_escrow(request, job_id):
     """Pay money into escrow"""
@@ -794,7 +938,7 @@ def release_payment(request, job_id):
     return render(request, 'accounts/release_payment.html', {'job': job})
 
 
-# ==================== 14. ESCROW FLOW (FIXED INITIATE PAYMENT) ====================
+# ==================== 15. ESCROW FLOW ====================
 @login_required
 def initiate_payment(request, job_id):
     """Initiate M-Pesa payment to escrow"""
@@ -1279,7 +1423,7 @@ def withdraw_funds(request, job_id):
     return render(request, 'accounts/withdraw_funds.html', {'job': job})
 
 
-# ==================== 15. NOTIFICATIONS ====================
+# ==================== 16. NOTIFICATIONS ====================
 @login_required
 def notifications(request):
     """View all notifications"""
@@ -1317,7 +1461,7 @@ def mark_all_notifications_read(request):
     return redirect('notifications')
 
 
-# ==================== 16. MESSAGING ====================
+# ==================== 17. MESSAGING ====================
 @login_required
 def send_message(request):
     """Send a message to an artisan"""
@@ -1395,7 +1539,7 @@ def send_message(request):
     return redirect('artisans_list')
 
 
-# ==================== 17. M-PESA CALLBACK ====================
+# ==================== 18. M-PESA CALLBACK ====================
 @csrf_exempt
 def mpesa_callback(request):
     """M-Pesa API callback URL"""
@@ -1489,7 +1633,7 @@ def mpesa_callback(request):
     })
 
 
-# ==================== 18. M-PESA TIMEOUT ====================
+# ==================== 19. M-PESA TIMEOUT ====================
 @csrf_exempt
 def mpesa_timeout(request):
     """M-Pesa timeout URL"""
@@ -1508,7 +1652,7 @@ def mpesa_timeout(request):
     return JsonResponse({"ResultCode": 1, "ResultDesc": "Method not allowed"})
 
 
-# ==================== 19. M-PESA RESULT ====================
+# ==================== 20. M-PESA RESULT ====================
 @csrf_exempt
 def mpesa_result(request):
     """M-Pesa result URL for B2C transactions"""

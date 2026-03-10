@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load location_tags %}
+
+{% block title %}Find Handymen by Location | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Find <span class="text-success">Local</span> Handymen</h1>
+        <p class="lead text-muted">Connect with trusted professionals in your area</p>
+    </div>
+
+    <!-- Location Search Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <form method="get" action="{% url 'artisans_list' %}" class="d-flex">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-search text-success"></i>
+                    </span>
+                    <input type="text"
+                           name="location"
+                           class="form-control border-start-0 border-end-0"
+                           placeholder="Enter your location (e.g., Nairobi, Ruiru, Mombasa)"
+                           value="{{ request.GET.location }}"
+                           required>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+            <p class="text-muted text-center mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Search by city, town, or estate
+            </p>
+        </div>
+    </div>
+
+    <!-- Popular Locations -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4"><i class="fas fa-star text-success me-2"></i>Popular Locations</h3>
+        </div>
+
+        {% get_location_cloud as locations %}
+
+        <!-- Handyman Locations -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Top Handyman Locations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for loc in locations.handyman_locations %}
+                            <a href="{% url 'artisans_list' %}?location={{ loc.location }}" class="btn btn-outline-success btn-sm m-1">
+                                {{ loc.location }} <span class="badge bg-success text-white ms-1">{{ loc.count }}</span>
+                            </a>
+                        {% empty %}
+                            <p class="text-muted">No handyman locations available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Locations -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Top Job Locations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for loc in locations.job_locations %}
+                            <a href="{% url 'job_list' %}?location={{ loc.location }}" class="btn btn-outline-primary btn-sm m-1">
+                                {{ loc.location }} <span class="badge bg-primary text-white ms-1">{{ loc.count }}</span>
+                            </a>
+                        {% empty %}
+                            <p class="text-muted">No job locations available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body p-5">
+                    <h3 class="fw-bold mb-4 text-center">How Location-Based Matching Works</h3>
+
+                    <div class="row g-4">
+                        <div class="col-md-4 text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                                <i class="fas fa-map-marker-alt fa-3x text-success"></i>
+                            </div>
+                            <h5>1. Set Your Location</h5>
+                            <p class="text-muted">Handymen add their service area. Clients enter their location.</p>
+                        </div>
+
+                        <div class="col-md-4 text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                                <i class="fas fa-search fa-3x text-success"></i>
+                            </div>
+                            <h5>2. Smart Matching</h5>
+                            <p class="text-muted">Our system matches clients with handymen in their area.</p>
+                        </div>
+
+                        <div class="col-md-4 text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                                <i class="fas fa-handshake fa-3x text-success"></i>
+                            </div>
+                            <h5>3. Local Service</h5>
+                            <p class="text-muted">Quick response times and fair travel costs for everyone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

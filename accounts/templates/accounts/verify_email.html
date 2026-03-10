@@ -1,26 +1,91 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Enter Code | The Handymen</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
-        .box { background: white; padding: 40px; border-radius: 8px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input { font-size: 24px; text-align: center; width: 200px; padding: 10px; margin: 20px 0; border: 2px solid #ddd; border-radius: 5px; }
-        .btn { background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>Enter Verification Code</h2>
-        {% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
-        <p>Check your email (or terminal) for the 6-digit code.</p>
+{% extends 'base.html' %}
 
-        <form method="post">
-            {% csrf_token %}
-            <input type="text" name="code" placeholder="000000" maxlength="6" required>
-            <br>
-            <button type="submit" class="btn">Verify & Access Dashboard</button>
-        </form>
+{% block title %}Verify Email | The Handymen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>Verify Your Email</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+
+                    <!-- Email Icon -->
+                    <div class="mb-4">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-4">
+                            <i class="fas fa-envelope-open-text fa-4x text-success"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="fw-bold mb-3">Check Your Inbox</h3>
+
+                    <p class="text-muted mb-4">
+                        We've sent a verification code to:<br>
+                        <strong class="text-success">{{ email }}</strong>
+                    </p>
+
+                    <!-- Auto-fill from URL (if coming from email link) -->
+                    {% if token_code %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Click the verify button below to complete your verification.
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Enter Verification Code</label>
+                            <input type="text"
+                                   name="code"
+                                   class="form-control form-control-lg text-center"
+                                   placeholder="000000"
+                                   value="{{ token_code }}"
+                                   maxlength="6"
+                                   pattern="[0-9]{6}"
+                                   required>
+                            <small class="text-muted">Enter the 6-digit code sent to your email</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
+                            <i class="fas fa-check-circle me-2"></i>Verify Email
+                        </button>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'resend_verification_email' %}" class="text-success text-decoration-none small">
+                                <i class="fas fa-redo-alt me-1"></i>Resend Code
+                            </a>
+                            <a href="{% url 'dashboard' %}" class="text-muted text-decoration-none small">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="small text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Verification code expires in 24 hours
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-question-circle text-success me-2"></i>Didn't receive the email?</h6>
+                    <ul class="small text-muted mb-0">
+                        <li>Check your spam or junk folder</li>
+                        <li>Make sure you entered the correct email address</li>
+                        <li>Wait a few minutes and try resending</li>
+                        <li>Contact support if the issue persists</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

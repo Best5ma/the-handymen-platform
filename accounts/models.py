@@ -19,8 +19,8 @@ class Profile(models.Model):
     cv = models.FileField(upload_to='cvs/', blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     profile_photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
-    location = models.CharField(max_length=255, blank=True)  # NEW
-    phone_number = models.CharField(max_length=15, blank=True)  # NEW
+    location = models.CharField(max_length=255, blank=True)  # Location field
+    phone_number = models.CharField(max_length=15, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -46,11 +46,11 @@ class Job(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='jobs')
     title = models.CharField(max_length=200)
     description = models.TextField()
-    location = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)  # Job location
     price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)  # NEW
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')  # NEW - This is the missing column
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     is_completed = models.BooleanField(default=False)
     applicants = models.ManyToManyField(User, related_name='applied_jobs', blank=True)
     hired_worker = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='hired_jobs')

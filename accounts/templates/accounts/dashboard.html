@@ -4,6 +4,25 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Email Verification Alert -->
+    {% if user.is_authenticated and not user.is_email_verified and not user.is_superuser %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </div>
+            <div>
+                <h5 class="alert-heading fw-bold">Email Not Verified</h5>
+                <p class="mb-1">Please verify your email address to access all platform features.</p>
+                <a href="{% url 'send_verification_email' %}" class="btn btn-warning btn-sm mt-2">
+                    <i class="fas fa-envelope me-2"></i>Send Verification Email
+                </a>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <!-- Welcome Header with Stats -->
     <div class="row mb-4">
         <div class="col-12">
@@ -177,6 +196,7 @@
                                         <th>ID</th>
                                         <th>Title</th>
                                         <th>Client</th>
+                                        <th>Location</th>
                                         <th>Budget</th>
                                         <th>Status</th>
                                         <th>Payment</th>
@@ -191,6 +211,7 @@
                                         <td>#{{ job.id }}</td>
                                         <td>{{ job.title|truncatechars:30 }}</td>
                                         <td>{{ job.client.username }}</td>
+                                        <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ job.location|default:"N/A" }}</td>
                                         <td>KES {{ job.price }}</td>
                                         <td>
                                             {% if job.status == 'completed' %}
@@ -226,7 +247,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="9" class="text-center py-4">
+                                        <td colspan="10" class="text-center py-4">
                                             <p class="text-muted mb-0">No jobs found</p>
                                         </td>
                                     </tr>
@@ -245,6 +266,7 @@
                                         <th>ID</th>
                                         <th>Username</th>
                                         <th>Email</th>
+                                        <th>Location</th>
                                         <th>Type</th>
                                         <th>Verified</th>
                                         <th>Joined</th>
@@ -257,6 +279,7 @@
                                         <td>#{{ user.id }}</td>
                                         <td>{{ user.username }}</td>
                                         <td>{{ user.email }}</td>
+                                        <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ user.profile.location|default:"N/A" }}</td>
                                         <td>
                                             {% if user.is_handyman %}
                                                 <span class="badge bg-info">Handyman</span>
@@ -284,7 +307,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">
+                                        <td colspan="8" class="text-center py-4">
                                             <p class="text-muted mb-0">No users found</p>
                                         </td>
                                     </tr>
@@ -302,6 +325,7 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Job</th>
+                                        <th>Job Location</th>
                                         <th>Handyman</th>
                                         <th>Amount</th>
                                         <th>Date</th>
@@ -313,6 +337,7 @@
                                     <tr>
                                         <td>#{{ bid.id }}</td>
                                         <td>{{ bid.job.title|truncatechars:30 }}</td>
+                                        <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ bid.job.location|default:"N/A" }}</td>
                                         <td>{{ bid.handyman.username }}</td>
                                         <td class="fw-bold text-success">KES {{ bid.bid_amount }}</td>
                                         <td>{{ bid.created_at|timesince }} ago</td>
@@ -324,7 +349,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center py-4">
+                                        <td colspan="7" class="text-center py-4">
                                             <p class="text-muted mb-0">No bids found</p>
                                         </td>
                                     </tr>
@@ -405,6 +430,7 @@
                                         <th>ID</th>
                                         <th>Handyman</th>
                                         <th>Email</th>
+                                        <th>Location</th>
                                         <th>Skills</th>
                                         <th>Experience</th>
                                         <th>Joined</th>
@@ -417,6 +443,7 @@
                                         <td>#{{ handyman.id }}</td>
                                         <td>{{ handyman.username }}</td>
                                         <td>{{ handyman.email }}</td>
+                                        <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ handyman.profile.location|default:"N/A" }}</td>
                                         <td>{{ handyman.profile.skills|truncatechars:20 }}</td>
                                         <td>{{ handyman.profile.experience_years }} years</td>
                                         <td>{{ handyman.date_joined|timesince }} ago</td>
@@ -428,7 +455,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">
+                                        <td colspan="8" class="text-center py-4">
                                             <p class="text-muted mb-0">No pending verifications</p>
                                         </td>
                                     </tr>
@@ -468,9 +495,19 @@
     {% elif role == "Handyman" %}
         <!-- Handyman Dashboard -->
 
-        <!-- Stats Cards -->
+        <!-- Location Alert -->
+        {% if not user.profile.location %}
+            <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Complete your profile!</strong>
+                <a href="{% url 'edit_profile' %}" class="alert-link">Add your location</a> to appear in local searches and get more job opportunities.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+
+        <!-- Stats Cards with Location -->
         <div class="row mb-4">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -485,7 +522,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -500,7 +537,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -512,6 +549,26 @@
                                 <h3 class="fw-bold mb-0">{{ my_bids.count }}</h3>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Location-based Stats Card -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm h-100 bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50 mb-1">Service Area</h6>
+                        <h5 class="fw-bold mb-0">
+                            {% if user.profile.location %}
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ user.profile.location }}
+                            {% else %}
+                                Not Set
+                            {% endif %}
+                        </h5>
+                        <small class="text-white-50">
+                            <i class="fas fa-users me-1"></i>
+                            Local clients can find you
+                        </small>
+                        <i class="fas fa-map-marked-alt position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
                     </div>
                 </div>
             </div>
@@ -539,10 +596,13 @@
             </div>
         </div>
 
-        <!-- Available Jobs Section -->
+        <!-- Available Jobs Section with Location Filter -->
         <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-header bg-success text-white py-3">
+            <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
                 <h4 class="mb-0"><i class="fas fa-briefcase me-2"></i> Available Jobs ({{ available_jobs.count }})</h4>
+                <a href="{% url 'location_search' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-map-marker-alt me-1"></i>Find Local Jobs
+                </a>
             </div>
             <div class="card-body">
                 {% if available_jobs %}
@@ -564,6 +624,9 @@
                                             <div class="d-flex align-items-center mb-2">
                                                 <i class="fas fa-map-marker-alt text-danger me-2" style="width: 20px;"></i>
                                                 <span>{{ job.location }}</span>
+                                                {% if job.location == user.profile.location %}
+                                                    <span class="badge bg-success ms-2">Your Area</span>
+                                                {% endif %}
                                             </div>
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-clock text-info me-2" style="width: 20px;"></i>
@@ -621,6 +684,10 @@
                                             <i class="fas fa-tag text-success me-2" style="width: 20px;"></i>
                                             <span><strong>Budget:</strong> KES {{ job.price }}</span>
                                         </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-map-marker-alt text-danger me-2" style="width: 20px;"></i>
+                                            <span><strong>Location:</strong> {{ job.location }}</span>
+                                        </div>
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-clock text-info me-2" style="width: 20px;"></i>
                                             <span><strong>Started:</strong> {{ job.updated_at|timesince }} ago</span>
@@ -665,6 +732,7 @@
                         <thead>
                             <tr>
                                 <th>Job Title</th>
+                                <th>Location</th>
                                 <th>Your Bid</th>
                                 <th>Message</th>
                                 <th>Status</th>
@@ -680,6 +748,7 @@
                                         {{ bid.job.title|truncatechars:30 }}
                                     </a>
                                 </td>
+                                <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ bid.job.location|default:"N/A" }}</td>
                                 <td class="fw-bold text-success">KES {{ bid.bid_amount }}</td>
                                 <td>
                                     <span class="bid-message" title="{{ bid.message }}">
@@ -713,8 +782,24 @@
     {% elif role == "Client" %}
         <!-- Client Dashboard -->
 
-        <!-- Stats Cards -->
+        <!-- Location-based Search Card -->
         <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'location_search' %}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                        <div class="card-body">
+                            <h6 class="text-white-50 mb-1">Find Local</h6>
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i>Near You
+                            </h5>
+                            <small class="text-white-50">Click to search handymen by location</small>
+                            <i class="fas fa-search position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
             <div class="col-md-3 mb-3">
                 <div class="card border-0 shadow-sm h-100 bg-primary text-white">
                     <div class="card-body">
@@ -739,15 +824,6 @@
                         <h6 class="text-white-50 mb-1">Total Jobs</h6>
                         <h3 class="fw-bold mb-0">{{ my_jobs.count }}</h3>
                         <i class="fas fa-clipboard-list position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm h-100 bg-warning text-white">
-                    <div class="card-body">
-                        <h6 class="text-white-50 mb-1">Completed Jobs</h6>
-                        <h3 class="fw-bold mb-0">{{ completed_jobs }}</h3>
-                        <i class="fas fa-check-circle position-absolute bottom-0 end-0 me-3 mb-3 opacity-25 fa-3x"></i>
                     </div>
                 </div>
             </div>
@@ -786,6 +862,9 @@
                                 <a href="{% url 'artisans_list' %}" class="btn btn-outline-success me-2">
                                     <i class="fas fa-users me-2"></i> Browse Artisans
                                 </a>
+                                <a href="{% url 'location_search' %}" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-map-marker-alt me-2"></i> Find Local
+                                </a>
                                 <a href="{% url 'post_job' %}" class="btn btn-success">
                                     <i class="fas fa-plus-circle me-2"></i> Post New Job
                                 </a>
@@ -808,6 +887,7 @@
                             <thead>
                                 <tr>
                                     <th>Title</th>
+                                    <th>Location</th>
                                     <th>Budget</th>
                                     <th>Bids</th>
                                     <th>Status</th>
@@ -824,6 +904,7 @@
                                             {{ job.title|truncatechars:30 }}
                                         </a>
                                     </td>
+                                    <td><i class="fas fa-map-marker-alt text-success me-1"></i>{{ job.location|default:"N/A" }}</td>
                                     <td class="fw-bold text-success">KES {{ job.price }}</td>
                                     <td>
                                         <span class="badge bg-info">{{ job.bids.count }}</span>

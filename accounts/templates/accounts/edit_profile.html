@@ -1,58 +1,119 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Edit Profile | The Handymen{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg mx-auto border-0" style="max-width: 650px; border-radius: 20px;">
-        <div class="card-header bg-dark text-white text-center py-4" style="border-radius: 20px 20px 0 0;">
-            <h2 class="mb-0">Update Professional Profile</h2>
-            <p class="small mb-0 opacity-75">Enhance your trust with clients</p>
-        </div>
-        <div class="card-body p-4">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Your Profile</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
 
-            <!-- CRITICAL: enctype allows Image and File uploads -->
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="row">
-                    <!-- Current Photo Preview -->
-                    <div class="col-12 text-center mb-4">
-                        {% if user.profile.profile_photo %}
-                            <img src="{{ user.profile.profile_photo.url }}" class="rounded-circle border shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
-                        {% else %}
-                            <div class="bg-light rounded-circle d-inline-block p-4 border">
-                                <span class="text-muted">No Photo</span>
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Skills</label>
+                                {{ form.skills }}
+                                <small class="text-muted">Separate skills with commas (e.g., Plumbing, Electrical)</small>
                             </div>
-                        {% endif %}
-                    </div>
 
-                    <!-- Profile Form Fields -->
-                    <div class="col-12">
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-dark">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                {% endif %}
-                                {% if field.errors %}
-                                    <div class="text-danger small">{{ field.errors }}</div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Experience (Years)</label>
+                                {{ form.experience_years }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Location Field - CRITICAL -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt text-success me-2"></i>Your Location
+                                </label>
+                                {{ form.location }}
+                                <small class="text-muted">Enter your city/town (e.g., Nairobi, Ruiru, Mombasa, Kisumu)</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-phone text-success me-2"></i>Phone Number
+                                </label>
+                                {{ form.phone_number }}
+                                <small class="text-muted">Format: 0712345678</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Bio</label>
+                            {{ form.bio }}
+                            <small class="text-muted">Tell clients about yourself and your experience</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Profile Photo</label>
+                                {{ form.profile_photo }}
+                                {% if user.profile.profile_photo %}
+                                    <div class="mt-2">
+                                        <img src="{{ user.profile.profile_photo.url }}" alt="Current profile photo" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
                                 {% endif %}
                             </div>
-                        {% endfor %}
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">CV (PDF only)</label>
+                                {{ form.cv }}
+                                {% if user.profile.cv %}
+                                    <div class="mt-2">
+                                        <a href="{{ user.profile.cv.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-file-pdf me-2"></i>View Current CV
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Location Tips Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Why Location Matters</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Clients search for handymen near them</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Get matched with local jobs</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Reduce travel time and costs</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Build local reputation</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Get recommended to neighbors</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Appear in location-based searches</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-
-                <hr class="my-4">
-
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
-                        💾 Save Changes
-                    </button>
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

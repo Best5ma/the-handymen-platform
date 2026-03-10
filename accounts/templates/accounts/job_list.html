@@ -10,22 +10,42 @@
         <p class="text-muted">{{ total_jobs }} jobs available</p>
     </div>
 
-    <!-- Search/filter bar -->
+    <!-- Search/filter bar with location -->
     <div class="row mb-4">
         <div class="col-md-10 mx-auto">
             <form method="get" class="row g-2">
                 <div class="col-md-4">
-                    <input type="text" name="location" class="form-control" placeholder="Location..." value="{{ request.GET.location }}">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-map-marker-alt text-success"></i>
+                        </span>
+                        <input type="text"
+                               name="location"
+                               class="form-control"
+                               placeholder="Location (e.g., Nairobi)"
+                               value="{{ request.GET.location }}">
+                    </div>
                 </div>
                 <div class="col-md-3">
-                    <input type="number" name="min_price" class="form-control" placeholder="Min Price" value="{{ request.GET.min_price }}">
+                    <input type="number" name="min_price" class="form-control"
+                           placeholder="Min Price" value="{{ request.GET.min_price }}">
                 </div>
                 <div class="col-md-3">
-                    <input type="number" name="max_price" class="form-control" placeholder="Max Price" value="{{ request.GET.max_price }}">
+                    <input type="number" name="max_price" class="form-control"
+                           placeholder="Max Price" value="{{ request.GET.max_price }}">
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">Filter</button>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
                 </div>
+                {% if request.GET.location or request.GET.min_price or request.GET.max_price %}
+                <div class="col-12 text-end mt-2">
+                    <a href="{% url 'job_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                </div>
+                {% endif %}
             </form>
         </div>
     </div>
@@ -44,25 +64,30 @@
 
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-tag text-success me-2"></i>
+                            <i class="fas fa-tag text-success me-2" style="width: 20px;"></i>
                             <span class="fw-bold text-success">KES {{ job.price }}</span>
                         </div>
                         <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                            <i class="fas fa-map-marker-alt text-danger me-2" style="width: 20px;"></i>
                             <span>{{ job.location }}</span>
+                            {% if job.location %}
+                                <a href="{% url 'job_list' %}?location={{ job.location|urlencode }}" class="ms-2 small text-decoration-none">
+                                    <i class="fas fa-search"></i> Similar
+                                </a>
+                            {% endif %}
                         </div>
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-clock text-info me-2"></i>
+                            <i class="fas fa-clock text-info me-2" style="width: 20px;"></i>
                             <span>{{ job.created_at|timesince }} ago</span>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
-                            <i class="fas fa-user"></i> {{ job.client.username }}
+                            <i class="fas fa-user me-1"></i> {{ job.client.username }}
                         </small>
                         <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-success btn-sm">
-                            View Details <i class="fas fa-arrow-right"></i>
+                            View Details <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -70,8 +95,14 @@
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
+            <i class="fas fa-briefcase fa-4x text-muted mb-3"></i>
             <h4 class="text-muted">No jobs available</h4>
-            <p>Check back later or adjust your filters</p>
+            <p class="text-muted">Check back later or adjust your filters</p>
+            {% if request.GET.location or request.GET.min_price or request.GET.max_price %}
+                <a href="{% url 'job_list' %}" class="btn btn-success mt-3">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </a>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -89,6 +120,16 @@
     }
     .badge {
         padding: 8px 12px;
+    }
+    .btn-success {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border: none;
+        transition: all 0.3s;
+    }
+    .btn-success:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
     }
 </style>
 {% endblock %}

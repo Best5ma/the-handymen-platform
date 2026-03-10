@@ -8,12 +8,16 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here-change-this-in-production'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG =False # Set to False only in production
 
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']  # Update this in production with your domain
+ALLOWED_HOSTS = [
+    'The Vicki9450.pythonanywhere.com',  # Replace with your actual PythonAnywhere username
+    '127.0.0.1',
+    'localhost',
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -23,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',  # Your accounts app
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -82,7 +86,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Africa/Nairobi'  # Set to Kenyan time
+TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 USE_TZ = True
 
@@ -106,45 +110,35 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
-# Email settings (Update with your email settings)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# For production, use:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-password'
-DEFAULT_FROM_EMAIL = 'The Handymen <noreply@thehandymen.co.ke>'
+# ==================== EMAIL CONFIGURATION ====================
+# OPTION 1: Direct password (for testing - remove spaces)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = 'victormartin9450@gmail.com'
+EMAIL_HOST_PASSWORD = 'toaerahhpduimbjd'  # Remove spaces - try this first
+DEFAULT_FROM_EMAIL = 'The Handymen <victormartin9450@gmail.com>'
+
+# OPTION 2: If spaces are needed, use this format:
+# EMAIL_HOST_PASSWORD = 'toae rahh pdui mbjd'  # With spaces
+
+# OPTION 3: Using environment variable (recommended for production)
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# OPTION 4: Console backend for testing (no emails sent)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend
+SITE_URL = 'https://Vicki9450.pythonanywhere.com'  # Change this too
 
 # ==================== M-PESA CONFIGURATION ====================
-
-# Set to True for testing without real M-Pesa transactions
-# Set to False when going live with real payments
-MPESA_SIMULATION_MODE = True  # True = simulated payments, False = real M-Pesa API calls
-
-# M-Pesa Environment (sandbox for testing, production for live)
-MPESA_ENVIRONMENT = 'sandbox'  # or 'production'
-
-# Safaricom Developer Portal Credentials
-# Get these from https://developer.safaricom.co.ke/
-MPESA_CONSUMER_KEY = 'your_consumer_key_here'  # Replace with your actual key
-MPESA_CONSUMER_SECRET = 'your_consumer_secret_here'  # Replace with your actual secret
-MPESA_PASSKEY = 'your_passkey_here'  # Replace with your actual passkey
-
-# M-Pesa Shortcodes
-MPESA_SHORTCODE = '174379'  # Sandbox shortcode (use '174379' for sandbox)
-MPESA_BUSINESS_SHORTCODE = '174379'  # Same as above for most cases
-
-# For production, use:
-# MPESA_ENVIRONMENT = 'production'
-# MPESA_SHORTCODE = 'your_production_shortcode'  # e.g., '123456'
-
-# Site URL for callbacks (important for M-Pesa to send notifications)
-# When testing with ngrok, replace this with your ngrok URL
-# When in production, use your actual domain
-SITE_URL = 'http://127.0.0.1:8000'  # Change to your ngrok URL for callbacks
-# Example with ngrok: SITE_URL = 'https://abc123.ngrok.io'
+MPESA_SIMULATION_MODE = True
+MPESA_ENVIRONMENT = 'sandbox'
+MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', 'your_consumer_key_here')
+MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'your_consumer_secret_here')
+MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'your_passkey_here')
+MPESA_SHORTCODE = '174379'
+MPESA_BUSINESS_SHORTCODE = '174379'
 
 # Admin emails for dispute notifications
 ADMINS = [
@@ -152,37 +146,20 @@ ADMINS = [
 ]
 
 # ==================== SECURITY SETTINGS ====================
-
-# Security settings for production (enable in production)
+# Only enable HTTPS redirect in production
 if not DEBUG:
-    # HTTPS Settings
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # Security Headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-
-    # HSTS Settings
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-    # Session Settings
-    SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+    SESSION_COOKIE_AGE = 86400
     SESSION_COOKIE_HTTPONLY = True
     SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-# ==================== CELERY CONFIGURATION (Optional) ====================
-# If you want to use Celery for background tasks like sending emails
-# CELERY_BROKER_URL = 'redis://localhost:6379'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = TIME_ZONE
 
 # ==================== LOGGING CONFIGURATION ====================
 LOGGING = {

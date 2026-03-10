@@ -13,7 +13,7 @@
         min-height: 90vh;
         display: flex;
         align-items: center;
-        margin-top: -1.5rem; /* Pulls up to meet navbar */
+        margin-top: -1.5rem;
         border-radius: 0 0 50px 50px;
     }
     .text-spacing { letter-spacing: 5px; }
@@ -88,7 +88,7 @@
     }
 </style>
 
-<!-- 1. FULL-SCREEN HERO SECTION WITH REAL IMAGE -->
+<!-- 1. FULL-SCREEN HERO SECTION -->
 <div class="hero-section text-center text-white overflow-hidden mb-5">
     <div class="container py-5">
         <div class="col-lg-10 mx-auto">
@@ -123,7 +123,7 @@
                 <div class="col-md-3 col-6 mb-3">
                     <div class="d-flex align-items-center justify-content-center">
                         <span class="fs-1 me-2">⭐</span>
-                        <span class="fw-bold">5,000+ Reviews</span>
+                        <span class="fw-bold">{{ total_jobs }}+ Jobs</span>
                     </div>
                 </div>
             </div>
@@ -169,11 +169,11 @@
     <div class="container">
         <div class="row text-center g-4">
             <div class="col-md-3 col-6">
-                <h2 class="display-4 fw-bold text-warning">500+</h2>
-                <p class="fs-5">Vetted Artisans</p>
+                <h2 class="display-4 fw-bold text-warning">{{ total_artisans }}+</h2>
+                <p class="fs-5">Verified Artisans</p>
             </div>
             <div class="col-md-3 col-6">
-                <h2 class="display-4 fw-bold text-warning">5,000+</h2>
+                <h2 class="display-4 fw-bold text-warning">{{ total_jobs }}+</h2>
                 <p class="fs-5">Jobs Completed</p>
             </div>
             <div class="col-md-3 col-6">
@@ -188,97 +188,111 @@
     </div>
 </div>
 
-<!-- 2. FEATURED ARTISANS (Vibrant Grid with REAL Images) -->
+<!-- 2. FEATURED ARTISANS (REAL VERIFIED WORKERS) -->
 <div class="container py-5">
     <div class="text-center mb-5">
         <h2 class="fw-bold display-5">Featured <span class="text-success">Professionals</span></h2>
         <div class="mx-auto bg-success mb-3" style="height: 4px; width: 60px;"></div>
-        <p class="text-muted fs-5">Meet some of our top-rated experts ready to help you</p>
+        <p class="text-muted fs-5">Meet some of our top-rated verified experts ready to help you</p>
     </div>
 
     <div class="row g-4">
-        <!-- Artisan 1 - Plumber with REAL image -->
+        {% for artisan in featured_artisans %}
         <div class="col-lg-4 col-md-6">
-            <div class="card border-0 shadow h-100 artisan-card">
+            <div class="card h-100 border-0 shadow-sm artisan-card">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80"
-                         class="card-img-top"
-                         style="height: 320px; object-fit: cover;"
-                         alt="Professional plumber">
-                    <span class="category-badge">🔧 Plumbing</span>
-                    <span class="rating-badge">⭐ 4.9 (128 jobs)</span>
+                    {% if artisan.profile.profile_photo %}
+                        <img src="{{ artisan.profile.profile_photo.url }}"
+                             class="card-img-top"
+                             style="height: 320px; object-fit: cover;"
+                             alt="{{ artisan.get_full_name|default:artisan.username }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 320px;">
+                            <i class="fas fa-user-circle fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success py-2 px-3">
+                        <i class="fas fa-check-circle me-1"></i>Verified
+                    </span>
+                    <span class="position-absolute top-0 start-0 m-3 badge bg-warning text-dark py-2 px-3">
+                        <i class="fas fa-star me-1"></i>
+                        {% if artisan.avg_rating %}
+                            {{ artisan.avg_rating|floatformat:1 }}
+                        {% else %}
+                            New
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="card-body p-4">
-                    <h4 class="fw-bold mb-1">Samuel Maina</h4>
-                    <p class="text-muted small mb-3">✓ 8+ years experience</p>
-                    <p class="mb-3">Specializing in solar water heating, bathroom installations, and drainage systems.</p>
-                    <div class="d-flex gap-2 mb-3">
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🚿 Solar</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🔨 Repairs</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">💧 Drainage</span>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h4 class="fw-bold mb-1">{{ artisan.get_full_name|default:artisan.username }}</h4>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-map-marker-alt text-success me-1"></i>
+                                {{ artisan.profile.location|default:"Location not set" }}
+                            </p>
+                        </div>
                     </div>
-                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Artisan 2 - Electrician with REAL image -->
-        <div class="col-lg-4 col-md-6">
-            <div class="card border-0 shadow h-100 artisan-card">
-                <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80"
-                         class="card-img-top"
-                         style="height: 320px; object-fit: cover;"
-                         alt="Professional electrician">
-                    <span class="category-badge">⚡ Electrical</span>
-                    <span class="rating-badge">⭐ 5.0 (95 jobs)</span>
-                </div>
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-1">Jane Wambui</h4>
-                    <p class="text-muted small mb-3">✓ Certified Electrician (EPRA)</p>
-                    <p class="mb-3">Expert in industrial wiring, smart-home automation, and solar installations.</p>
-                    <div class="d-flex gap-2 mb-3">
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🏭 Industrial</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🏠 Smart Home</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">☀️ Solar</span>
-                    </div>
-                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
-                </div>
-            </div>
-        </div>
+                    <p class="text-muted small mb-3">{{ artisan.profile.bio|truncatechars:80|default:"Experienced professional ready to help with your home needs." }}</p>
 
-        <!-- Artisan 3 - Carpenter with REAL image -->
-        <div class="col-lg-4 col-md-6">
-            <div class="card border-0 shadow h-100 artisan-card">
-                <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1617529497471-9218633199c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                         class="card-img-top"
-                         style="height: 320px; object-fit: cover;"
-                         alt="Professional carpenter">
-                    <span class="category-badge">🪚 Carpentry</span>
-                    <span class="rating-badge">⭐ 4.8 (76 jobs)</span>
-                </div>
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-1">David Otieno</h4>
-                    <p class="text-muted small mb-3">✓ Master Carpenter</p>
-                    <p class="mb-3">Specialist in custom furniture, kitchen cabinetry, and interior woodwork.</p>
-                    <div class="d-flex gap-2 mb-3">
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🪑 Furniture</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🚪 Doors</span>
-                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">🔨 Renovation</span>
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0">{{ artisan.job_count|default:0 }}</h6>
+                            <small class="text-muted">Jobs</small>
+                        </div>
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0">{{ artisan.review_count|default:0 }}</h6>
+                            <small class="text-muted">Reviews</small>
+                        </div>
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0">{{ artisan.profile.experience_years|default:0 }}y</h6>
+                            <small class="text-muted">Exp</small>
+                        </div>
                     </div>
-                    <a href="{% url 'signup' %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-bold">VIEW PROFILE →</a>
+
+                    <div class="mb-3">
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                            <i class="fas fa-tools me-1"></i>{{ artisan.profile.skills|default:"Handyman" }}
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'public_profile' artisan.id %}" class="btn btn-success">
+                            <i class="fas fa-user me-2"></i>VIEW PROFILE
+                        </a>
+                        {% if user.is_authenticated and user.is_client %}
+                            {% if artisan.profile.phone_number %}
+                                <a href="tel:{{ artisan.profile.phone_number }}" class="btn btn-outline-success">
+                                    <i class="fas fa-phone me-2"></i>CALL NOW
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'signup' %}?next={% url 'public_profile' artisan.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i>SIGNUP TO CONTACT
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No verified artisans yet</h4>
+            <p class="text-muted">Check back soon as handymen get verified</p>
+        </div>
+        {% endfor %}
     </div>
 
     <div class="text-center mt-5">
-        <a href="{% url 'signup' %}" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">👥 BROWSE ALL ARTISANS</a>
+        <a href="{% url 'artisans_list' %}" class="btn btn-outline-success btn-lg px-5 py-3 fw-bold">
+            <i class="fas fa-users me-2"></i>BROWSE ALL ARTISANS
+        </a>
     </div>
 </div>
 
-<!-- 3. TRUST SECTION WITH REAL IMAGE -->
+<!-- 3. TRUST SECTION -->
 <div id="about" class="container py-5">
     <div class="row align-items-center bg-white p-5 rounded-5 shadow-lg border">
         <div class="col-lg-6 mb-4 mb-lg-0">
@@ -334,34 +348,34 @@
             <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <span class="fs-1 mb-3">🔧</span>
                 <h5 class="fw-bold">Plumbing</h5>
-                <p class="text-muted small">243 artisans</p>
+                <p class="text-muted small">{{ total_artisans|default:"50" }}+ artisans</p>
             </div>
         </div>
         <div class="col-md-3 col-6">
             <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <span class="fs-1 mb-3">⚡</span>
                 <h5 class="fw-bold">Electrical</h5>
-                <p class="text-muted small">187 artisans</p>
+                <p class="text-muted small">{{ total_artisans|default:"50" }}+ artisans</p>
             </div>
         </div>
         <div class="col-md-3 col-6">
             <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <span class="fs-1 mb-3">🪚</span>
                 <h5 class="fw-bold">Carpentry</h5>
-                <p class="text-muted small">156 artisans</p>
+                <p class="text-muted small">{{ total_artisans|default:"50" }}+ artisans</p>
             </div>
         </div>
         <div class="col-md-3 col-6">
             <div class="card border-0 shadow-sm text-center p-4 rounded-4 category-card" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 <span class="fs-1 mb-3">🎨</span>
                 <h5 class="fw-bold">Painting</h5>
-                <p class="text-muted small">98 artisans</p>
+                <p class="text-muted small">{{ total_artisans|default:"50" }}+ artisans</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 4. FAQ SECTION (Improved) -->
+<!-- 4. FAQ SECTION -->
 <div id="faq" class="container py-5 mb-5">
     <div class="text-center mb-5">
         <h2 class="fw-bold display-6">Frequently Asked <span class="text-success">Questions</span></h2>
@@ -437,48 +451,17 @@
     </div>
 </div>
 
-<!-- FOOTER -->
-<footer class="bg-dark text-white py-5 mt-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <h4 class="fw-bold text-warning mb-3">🛠️ THE HANDYMEN</h4>
-                <p class="small opacity-75">Kenya's most trusted marketplace connecting clients with verified professional handymen.</p>
-                <div class="d-flex gap-3">
-                    <span class="badge bg-light text-dark p-3 rounded-circle">📘</span>
-                    <span class="badge bg-light text-dark p-3 rounded-circle">📱</span>
-                    <span class="badge bg-light text-dark p-3 rounded-circle">📧</span>
-                </div>
-            </div>
-            <div class="col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Quick Links</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">How It Works</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQs</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
-                </ul>
-            </div>
-            <div class="col-md-3 mb-4">
-                <h6 class="fw-bold mb-3">Contact Info</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2">📍 Ruiru, Kenya</li>
-                    <li class="mb-2">📞 +254 700 000 000</li>
-                    <li class="mb-2">✉️ hello@thehandymen.co.ke</li>
-                </ul>
-            </div>
-            <div class="col-md-3 mb-4">
-                <h6 class="fw-bold mb-3">Download App</h6>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-secondary p-3">Google Play</span>
-                    <span class="badge bg-secondary p-3">App Store</span>
-                </div>
-            </div>
-        </div>
-        <hr class="opacity-25">
-        <div class="text-center small opacity-75">
-            <p class="mb-0">© 2026 The Handymen Marketplace. All rights reserved. | Privacy Policy | Terms of Service</p>
-        </div>
-    </div>
-</footer>
+<!-- Add Font Awesome if not in base.html -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<style>
+.category-card {
+    transition: all 0.3s;
+    cursor: pointer;
+}
+.category-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+</style>
 {% endblock %}

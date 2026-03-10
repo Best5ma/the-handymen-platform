@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email | The Handymen</title>
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .header span {
+            color: #22c55e;
+        }
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .code-box {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: 10px;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px auto;
+            display: inline-block;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .note {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ THE <span>HANDYMEN</span></h1>
+        </div>
+
+        <div class="content">
+            <h2 style="color: #1e293b; margin-bottom: 20px;">Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+
+            <p style="color: #475569; font-size: 16px; line-height: 1.6;">
+                Thank you for joining The Handymen marketplace. To start using your account, please verify your email address using the code below:
+            </p>
+
+            <div class="code-box">
+                {{ verification_code }}
+            </div>
+
+            <p style="color: #475569; font-size: 16px; line-height: 1.6;">
+                Or click the button below to verify automatically:
+            </p>
+
+            <a href="{{ verification_link }}" class="button">
+                ✅ Verify Email Address
+            </a>
+
+            <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+                This code will expire in 24 hours.
+            </p>
+
+            <div class="note">
+                If you didn't create an account on The Handymen, please ignore this email.
+            </div>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0;">&copy; 2026 The Handymen Marketplace. All rights reserved.</p>
+            <p style="margin: 5px 0 0; font-size: 12px;">Ruiru, Kenya | hello@thehandymen.co.ke</p>
+        </div>
+    </div>
+</body>
+</html>

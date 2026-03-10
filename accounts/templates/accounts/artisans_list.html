@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Our Verified Artisans | The Handymen{% endblock %}
 
@@ -13,27 +14,43 @@
 
     <!-- Search/Filter Bar -->
     <div class="row mb-5">
-        <div class="col-md-8 mx-auto">
-            <form method="get" class="d-flex gap-2">
-                <div class="flex-grow-1">
+        <div class="col-md-10 mx-auto">
+            <form method="get" class="row g-2">
+                <div class="col-md-5">
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0">
-                            <i class="fas fa-search text-success"></i>
+                            <i class="fas fa-map-marker-alt text-success"></i>
                         </span>
                         <input type="text"
                                name="location"
-                               class="form-control form-control-lg border-start-0"
-                               placeholder="Filter by location (e.g., Nairobi, Mombasa)..."
+                               class="form-control border-start-0"
+                               placeholder="Filter by location (e.g., Nairobi, Ruiru)"
                                value="{{ request.GET.location }}">
                     </div>
                 </div>
-                <button type="submit" class="btn btn-success btn-lg px-4">
-                    <i class="fas fa-filter me-2"></i>Filter
-                </button>
-                {% if request.GET.location %}
-                    <a href="{% url 'artisans_list' %}" class="btn btn-outline-secondary btn-lg">
-                        <i class="fas fa-times"></i>
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fas fa-tools text-success"></i>
+                        </span>
+                        <input type="text"
+                               name="skill"
+                               class="form-control border-start-0"
+                               placeholder="Filter by skill (e.g., Plumbing)"
+                               value="{{ request.GET.skill }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                </div>
+                {% if request.GET.location or request.GET.skill %}
+                <div class="col-12 text-end mt-2">
+                    <a href="{% url 'artisans_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Filters
                     </a>
+                </div>
                 {% endif %}
             </form>
         </div>
@@ -80,40 +97,53 @@
 
                 <!-- Artisan Info -->
                 <div class="card-body p-4">
-                    <h4 class="fw-bold mb-1">{{ artisan.get_full_name|default:artisan.username }}</h4>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h4 class="fw-bold mb-0">{{ artisan.get_full_name|default:artisan.username }}</h4>
+                    </div>
 
-                    <!-- Location -->
-                    <p class="text-muted mb-3">
+                    <!-- Location with enhanced display -->
+                    <div class="d-flex align-items-center mb-2">
                         <i class="fas fa-map-marker-alt text-success me-2"></i>
-                        {{ artisan.profile.location|default:"Location not specified" }}
-                    </p>
+                        <span class="fw-bold">{{ artisan.profile.location|default:"Location not set" }}</span>
+                        {% if artisan.profile.location %}
+                            <a href="{% url 'artisans_list' %}?location={{ artisan.profile.location|urlencode }}" class="ms-2 small text-decoration-none">
+                                <i class="fas fa-search"></i> Similar
+                            </a>
+                        {% endif %}
+                    </div>
 
-                    <!-- Skills/Specialization -->
+                    <!-- Skills -->
                     {% if artisan.profile.skills %}
                     <div class="mb-3">
-                        <span class="badge bg-light text-dark me-1 mb-1 p-2">
-                            <i class="fas fa-tools text-success me-1"></i>{{ artisan.profile.skills }}
-                        </span>
+                        {% for skill in artisan.profile.skills.split %}
+                            <span class="badge bg-light text-dark me-1 mb-1 p-2">{{ skill }}</span>
+                        {% endfor %}
                     </div>
                     {% endif %}
 
                     <!-- Bio -->
                     <p class="text-muted small mb-3">
-                        {{ artisan.profile.bio|truncatechars:120|default:"No bio provided" }}
+                        {{ artisan.profile.bio|truncatechars:100|default:"No bio provided" }}
                     </p>
 
                     <!-- Stats -->
                     <div class="row text-center mb-4 g-2">
-                        <div class="col-6">
+                        <div class="col-4">
+                            <div class="bg-light rounded-3 p-2">
+                                <h6 class="fw-bold mb-0">{{ artisan.job_count|default:0 }}</h6>
+                                <small class="text-muted">Jobs</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
                             <div class="bg-light rounded-3 p-2">
                                 <h6 class="fw-bold mb-0">{{ artisan.review_count|default:0 }}</h6>
                                 <small class="text-muted">Reviews</small>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <div class="bg-light rounded-3 p-2">
-                                <h6 class="fw-bold mb-0">{{ artisan.profile.experience_years|default:0 }}yrs</h6>
-                                <small class="text-muted">Experience</small>
+                                <h6 class="fw-bold mb-0">{{ artisan.profile.experience_years|default:0 }}y</h6>
+                                <small class="text-muted">Exp</small>
                             </div>
                         </div>
                     </div>
@@ -123,11 +153,30 @@
                         <a href="{% url 'public_profile' artisan.id %}" class="btn btn-outline-success">
                             <i class="fas fa-user me-2"></i>View Full Profile
                         </a>
-                        {% if user.is_authenticated and user.is_client %}
-                            <button class="btn btn-success"
-                                    onclick="openContactModal('{{ artisan.id }}', '{{ artisan.get_full_name|default:artisan.username }}')">
-                                <i class="fas fa-envelope me-2"></i>Contact Artisan
-                            </button>
+
+                        {% if user.is_authenticated %}
+                            {% if user.is_client %}
+                                <!-- Client can call directly -->
+                                {% if artisan.profile.phone_number %}
+                                    <a href="tel:{{ artisan.profile.phone_number }}" class="btn btn-success">
+                                        <i class="fas fa-phone me-2"></i>Call {{ artisan.profile.phone_number }}
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="fas fa-phone-slash me-2"></i>No Phone Available
+                                    </button>
+                                {% endif %}
+                            {% elif user.is_handyman %}
+                                <!-- Handyman cannot call other handymen -->
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-phone me-2"></i>Contact via Job Posting
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <!-- Guest user - redirect to signup -->
+                            <a href="{% url 'signup' %}?next={% url 'public_profile' artisan.id %}" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>Signup to Contact
+                            </a>
                         {% endif %}
                     </div>
                 </div>
@@ -142,106 +191,25 @@
                 </div>
                 <h4 class="text-muted mb-3">No artisans found</h4>
                 <p class="text-muted mb-4">
-                    {% if request.GET.location %}
-                        No verified artisans found in "{{ request.GET.location }}"
+                    {% if request.GET.location or request.GET.skill %}
+                        No verified artisans match your filters.
                     {% else %}
                         No verified artisans available at the moment.
                     {% endif %}
                 </p>
-                {% if request.GET.location %}
+                {% if request.GET.location or request.GET.skill %}
                     <a href="{% url 'artisans_list' %}" class="btn btn-success">
-                        <i class="fas fa-times me-2"></i>Clear Filter
+                        <i class="fas fa-times me-2"></i>Clear Filters
                     </a>
                 {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
-
-    <!-- Pagination (if needed) -->
-    {% if artisans.has_other_pages %}
-    <nav aria-label="Artisans pagination" class="mt-5">
-        <ul class="pagination justify-content-center">
-            {% if artisans.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ artisans.previous_page_number }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-            {% endif %}
-
-            {% for num in artisans.paginator.page_range %}
-                {% if artisans.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link bg-success border-success">{{ num }}</span>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link text-success" href="?page={{ num }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
-                            {{ num }}
-                        </a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-
-            {% if artisans.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ artisans.next_page_number }}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
 </div>
 
-<!-- Contact Modal -->
-<div class="modal fade" id="contactModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-envelope me-2"></i>Contact <span id="artisanName"></span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="contactForm" method="post" action="{% url 'send_message' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="artisan_id" id="artisanId">
-
-                    <div class="mb-3">
-                        <label for="subject" class="form-label fw-bold">Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject"
-                               placeholder="What would you like to discuss?" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="message" class="form-label fw-bold">Message</label>
-                        <textarea class="form-control" id="message" name="message" rows="4"
-                                  placeholder="Write your message here..." required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="phone" class="form-label fw-bold">Your Phone Number (Optional)</label>
-                        <input type="tel" class="form-control" id="phone" name="phone"
-                               placeholder="e.g., 0712345678">
-                        <small class="text-muted">So the artisan can reach you directly</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <button type="submit" form="contactForm" class="btn btn-success">
-                    <i class="fas fa-paper-plane me-2"></i>Send Message
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
 <style>
 .hover-card {
@@ -263,32 +231,10 @@
     font-weight: 500;
     border-radius: 50px;
 }
-.page-link {
-    border: none;
-    margin: 0 5px;
-    border-radius: 10px;
-    color: #1e293b;
-    font-weight: 600;
-}
-.page-link:hover {
-    background-color: #22c55e;
-    color: white;
-}
-.page-item.active .page-link {
-    background-color: #22c55e;
-    border-color: #22c55e;
-}
-.modal-content {
-    border-radius: 15px;
-    border: none;
-}
-.modal-header {
-    border-radius: 15px 15px 0 0;
-}
 .btn-success {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     border: none;
-    padding: 10px 20px;
+    transition: all 0.3s;
 }
 .btn-success:hover {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
@@ -298,46 +244,12 @@
 .btn-outline-success {
     border: 2px solid #22c55e;
     color: #22c55e;
+    transition: all 0.3s;
 }
 .btn-outline-success:hover {
     background-color: #22c55e;
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
 }
 </style>
-
-<script>
-function openContactModal(artisanId, artisanName) {
-    document.getElementById('artisanId').value = artisanId;
-    document.getElementById('artisanName').textContent = artisanName;
-
-    // Pre-fill subject
-    document.getElementById('subject').value = 'Inquiry about your services';
-
-    // Show the modal
-    var modal = new bootstrap.Modal(document.getElementById('contactModal'));
-    modal.show();
-}
-
-// Optional: Add animation on scroll
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.hover-card');
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = 1;
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    });
-
-    cards.forEach(card => {
-        card.style.opacity = 0;
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        observer.observe(card);
-    });
-});
-</script>
 {% endblock %}
