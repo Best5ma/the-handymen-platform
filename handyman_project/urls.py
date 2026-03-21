@@ -10,17 +10,21 @@ from django.conf.urls.static import static
 from django.http import HttpResponse
 
 
-# Test view to verify server is working
+# Test view to verify server is working (temporary)
 def test_view(request):
     return HttpResponse("✅ The Handymen is running! Server is working correctly.")
 
 
 urlpatterns = [
-    
-    path('test/', views.test_view, name='test'),
+    # Test route - uses local test_view function
+    path('test/', test_view, name='test'),
+
+    # Main routes - use views from accounts app
     path('', views.home_view, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('admin/', admin.site.urls),
+
+    # Authentication
     path('accounts/signup/', views.SignUpView.as_view(), name='signup'),
     path('accounts/login/', auth_views.LoginView.as_view(
         template_name='registration/login.html',
