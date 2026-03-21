@@ -16,19 +16,11 @@ def test_view(request):
 
 
 urlpatterns = [
-    # Test route
-    path('test/', test_view, name='test'),
-
-    # Homepage
+    
+    path('test/', views.test_view, name='test'),
     path('', views.home_view, name='home'),
-
-    # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
-
-    # Admin
     path('admin/', admin.site.urls),
-
-    # Authentication
     path('accounts/signup/', views.SignUpView.as_view(), name='signup'),
     path('accounts/login/', auth_views.LoginView.as_view(
         template_name='registration/login.html',
