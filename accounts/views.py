@@ -50,7 +50,7 @@ def home_view(request):
         'total_artisans': total_artisans,
         'total_jobs': total_jobs
     }
-    return render(request, 'accounts/home.html') 
+    return render(request, 'accounts/home.html')
 
 
 # ==================== 2. EMAIL VERIFICATION (ENHANCED) ====================
