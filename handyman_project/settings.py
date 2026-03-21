@@ -15,7 +15,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-ke
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS - Add your Railway domain
-ALLOWED_HOSTS = ['the-handymen-platform.up.railway.app', 'localhost', '127.0.0.1', '.railway.app']
+ALLOWED_HOSTS = ['the-handymen-platform-production.up.railway.app', 'localhost', '127.0.0.1', '.railway.app']
 
 # Application definition
 INSTALLED_APPS = [
