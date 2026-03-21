@@ -14,8 +14,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-ke
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# ALLOWED_HOSTS
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS - Add your Railway domain
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -60,11 +60,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'handyman_project.wsgi.application'
 
-# Database
+# Database - PostgreSQL on Railway, SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.config(default=DATABASE_URL)
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
 else:
     DATABASES = {
@@ -99,7 +99,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# Only add STATICFILES_DIRS if the directory exists
+if (BASE_DIR / 'static').exists():
+    STATICFILES_DIRS = [BASE_DIR / 'static']
+else:
+    STATICFILES_DIRS = []
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (Uploads)
@@ -118,17 +122,26 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
 # ==================== EMAIL CONFIGURATION ====================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = 'victormartin9450@gmail.com'
-EMAIL_HOST_PASSWORD = 'toaerahhpduimbjd'
-DEFAULT_FROM_EMAIL = 'The Handymen <victormartin9450@gmail.com>'
+# Use console backend for Railway (emails appear in logs)
+# This avoids "Network is unreachable" errors on Railway free tier
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Site URL
-SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+# Your email settings are saved but commented out for Railway
+# Uncomment these when moving to a platform that allows outgoing SMTP
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 465
+# EMAIL_USE_SSL = True
+# EMAIL_USE_TLS = False
+# EMAIL_HOST_USER = 'victormartin9450@gmail.com'
+# EMAIL_HOST_PASSWORD = 'toaerahhpduimbjd'
+# DEFAULT_FROM_EMAIL = 'The Handymen <victormartin9450@gmail.com>'
+
+# For local development, you can use console backend
+# For production with email, uncomment the SMTP section above
+
+# Site URL for email links
+SITE_URL = os.environ.get('SITE_URL', 'https://the-handymen-platform.up.railway.app')
 
 # ==================== M-PESA CONFIGURATION ====================
 MPESA_SIMULATION_MODE = os.environ.get('MPESA_SIMULATION_MODE', 'True') == 'True'
