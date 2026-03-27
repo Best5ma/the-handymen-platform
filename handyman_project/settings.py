@@ -3,19 +3,17 @@ Django settings for handyman_project project.
 """
 import os
 from pathlib import Path
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here-change-this-in-production')
+SECRET_KEY = 'django-insecure-your-secret-key-here-change-this-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = False
 
-# ALLOWED_HOSTS - Add your Railway domain
-ALLOWED_HOSTS = ['the-handymen-platform-production.up.railway.app', 'localhost', '127.0.0.1', '.railway.app']
+ALLOWED_HOSTS = ['vicki9450.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 # Application definition
 INSTALLED_APPS = [
@@ -24,14 +22,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'accounts',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,19 +56,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'handyman_project.wsgi.application'
 
-# Database - PostgreSQL on Railway, SQLite locally
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -98,13 +88,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-# Only add STATICFILES_DIRS if the directory exists
-if (BASE_DIR / 'static').exists():
-    STATICFILES_DIRS = [BASE_DIR / 'static']
-else:
-    STATICFILES_DIRS = []
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = '/home/vicki9450/the-handymen-platform/static'
+STATICFILES_DIRS = []
 
 # Media files (Uploads)
 MEDIA_URL = '/media/'
@@ -122,72 +107,30 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
 # ==================== EMAIL CONFIGURATION ====================
-# Use console backend for Railway (emails appear in logs)
-# This avoids "Network is unreachable" errors on Railway free tier
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Your working Gmail configuration - port 465 with SSL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = 'victormartin9450@gmail.com'
+EMAIL_HOST_PASSWORD = 'toaerahhpduimbjd'
+DEFAULT_FROM_EMAIL = 'The Handymen <victormartin9450@gmail.com>'
 
-# Your email settings are saved but commented out for Railway
-# Uncomment these when moving to a platform that allows outgoing SMTP
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 465
-# EMAIL_USE_SSL = True
-# EMAIL_USE_TLS = False
-# EMAIL_HOST_USER = 'victormartin9450@gmail.com'
-# EMAIL_HOST_PASSWORD = 'toaerahhpduimbjd'
-# DEFAULT_FROM_EMAIL = 'The Handymen <victormartin9450@gmail.com>'
-
-# For local development, you can use console backend
-# For production with email, uncomment the SMTP section above
-
-# Site URL for email links
-SITE_URL = os.environ.get('SITE_URL', 'https://the-handymen-platform.up.railway.app')
+SITE_URL = 'http://127.0.0.1:8000'
 
 # ==================== M-PESA CONFIGURATION ====================
-MPESA_SIMULATION_MODE = os.environ.get('MPESA_SIMULATION_MODE', 'True') == 'True'
-MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
-MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', 'your_consumer_key_here')
-MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'your_consumer_secret_here')
-MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'your_passkey_here')
+MPESA_SIMULATION_MODE = True
+MPESA_ENVIRONMENT = 'sandbox'
+MPESA_CONSUMER_KEY = 'your_consumer_key_here'
+MPESA_CONSUMER_SECRET = 'your_consumer_secret_here'
+MPESA_PASSKEY = 'your_passkey_here'
 MPESA_SHORTCODE = '174379'
 MPESA_BUSINESS_SHORTCODE = '174379'
 
-# Admin emails for dispute notifications
-ADMINS = [
-    ('Admin', 'admin@thehandymen.co.ke'),
-]
+ADMINS = [('Admin', 'admin@thehandymen.co.ke')]
 
-# ==================== SECURITY SETTINGS ====================
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_AGE = 86400
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-# ==================== LOGGING ====================
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
-
-# Create logs directory if it doesn't exist
+# Create logs directory
 LOGS_DIR = BASE_DIR / 'logs'
 if not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR)
